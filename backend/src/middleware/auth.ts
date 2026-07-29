@@ -93,6 +93,6 @@ export function generateToken(payload: {
   if (!jwtSecret) throw new Error('JWT_SECRET not configured');
 
   return jwt.sign(payload, jwtSecret, {
-    expiresIn: (process.env.JWT_EXPIRES_IN as string) || '7d',
+    expiresIn: (process.env.JWT_EXPIRES_IN || '7d') as any,
   });
 }
