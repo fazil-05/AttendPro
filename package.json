@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "AttendPro - Enterprise Attendance Management System (Full-Stack Monorepo)",
   "engines": {
-    "node": "18.x"
+    "node": "20.x"
   },
   "scripts": {
     "build": "cd frontend && npm ci && npm run build",
