@@ -5,10 +5,10 @@ import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import {
-  BarChart, Bar, LineChart, Line, PieChart, Pie, Cell,
+  BarChart, Bar, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
 } from 'recharts';
-import { Users, Building2, CheckCircle, Clock, XCircle, UserX, UserCheck, Calendar } from 'lucide-react';
+import { Users, Building2, CheckCircle, Clock, UserX, UserCheck, Calendar } from 'lucide-react';
 import api from '../../services/api';
 import type { DashboardStats } from '../../types';
 import { StatCardSkeleton } from '../../components/ui/SkeletonLoader';

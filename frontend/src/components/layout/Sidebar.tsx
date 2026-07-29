@@ -2,12 +2,12 @@
 // Collapsible sidebar navigation
 
 import React, { useState } from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  LayoutDashboard, Users, Building2, Clock, FileText, CalendarDays,
-  MapPin, Settings, LogOut, ChevronLeft, ChevronRight, Bell,
-  ClipboardList, BarChart3, Navigation, Menu, X,
+  LayoutDashboard, Users, Building2, Clock, CalendarDays,
+  MapPin, Settings, LogOut, ChevronLeft, ChevronRight,
+  BarChart3, Navigation, Menu,
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
@@ -41,7 +41,6 @@ export const Sidebar: React.FC = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
-  const location = useLocation();
 
   const filteredItems = navItems.filter(item =>
     user?.role && item.roles.includes(user.role)

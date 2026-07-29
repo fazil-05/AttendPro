@@ -5,10 +5,10 @@ import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import {
-  BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid,
+  LineChart, Line, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer, Legend,
 } from 'recharts';
-import { Download, Calendar, Filter, FileText, Table, TrendingUp } from 'lucide-react';
+import { Download, FileText, TrendingUp } from 'lucide-react';
 import { format } from 'date-fns';
 import api from '../../services/api';
 import { TableSkeleton } from '../../components/ui/SkeletonLoader';

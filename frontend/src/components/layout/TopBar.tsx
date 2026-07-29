@@ -1,8 +1,8 @@
 // src/components/layout/TopBar.tsx
 // Top navigation bar with search, notifications, and user info
 
-import React, { useState } from 'react';
-import { Search, Bell, ChevronDown } from 'lucide-react';
+import React from 'react';
+import { Bell } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 
 interface TopBarProps {
@@ -11,7 +11,6 @@ interface TopBarProps {
 
 export const TopBar: React.FC<TopBarProps> = ({ title = 'Dashboard' }) => {
   const { user } = useAuth();
-  const [showNotifications, setShowNotifications] = useState(false);
 
   const today = new Date().toLocaleDateString('en-IN', {
     weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
@@ -32,7 +31,6 @@ export const TopBar: React.FC<TopBarProps> = ({ title = 'Dashboard' }) => {
       <div className="flex items-center gap-3">
         {/* Notifications */}
         <button
-          onClick={() => setShowNotifications(p => !p)}
           className="relative p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
           id="notifications-btn"
         >

@@ -3,7 +3,7 @@
 
 import React, { useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 import {
   MapPin, Camera, Clock, CheckCircle, XCircle, Navigation,
@@ -17,7 +17,7 @@ import { useAuth } from '../../contexts/AuthContext';
 
 const MarkAttendancePage: React.FC = () => {
   const { user } = useAuth();
-  const { location, error: gpsError, isLoading: gpsLoading, getLocation } = useGeolocation();
+  const { error: gpsError, isLoading: gpsLoading, getLocation } = useGeolocation();
   const {
     videoRef, isActive, capturedImage, error: camError,
     isLoading: camLoading, startCamera, capturePhoto, resetCamera,

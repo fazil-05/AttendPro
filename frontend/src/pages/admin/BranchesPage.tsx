@@ -5,7 +5,7 @@ import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
-import { Plus, Edit, Trash2, ToggleRight, ToggleLeft, MapPin, Users, Building2, Navigation, CheckCircle2, Loader2 } from 'lucide-react';
+import { Plus, Edit, Trash2, ToggleRight, ToggleLeft, MapPin, Users, Building2, Navigation, Loader2 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -35,7 +35,7 @@ const BranchFormModal: React.FC<{
   );
   const [isGeocoding, setIsGeocoding] = useState(false);
 
-  const { register, handleSubmit, getValue, setValue, watch, formState: { errors, isSubmitting } } = useForm<BranchForm>({
+  const { register, handleSubmit, watch, formState: { errors, isSubmitting } } = useForm<BranchForm>({
     resolver: zodResolver(branchSchema),
     defaultValues: branch ? {
       name: branch.name,

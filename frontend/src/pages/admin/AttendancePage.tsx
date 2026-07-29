@@ -4,7 +4,6 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
-import { Search, Filter, Clock, Calendar } from 'lucide-react';
 import { format } from 'date-fns';
 import api from '../../services/api';
 import type { Attendance } from '../../types';
@@ -14,7 +13,6 @@ import { TableSkeleton } from '../../components/ui/SkeletonLoader';
 const AttendancePage: React.FC = () => {
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [statusFilter, setStatusFilter] = useState('');
-  const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
 
   const { data, isLoading } = useQuery({

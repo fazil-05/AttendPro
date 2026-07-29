@@ -5,7 +5,7 @@ import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
-import { CheckCircle, XCircle, Clock, Calendar, Filter } from 'lucide-react';
+import { CheckCircle, XCircle, Calendar } from 'lucide-react';
 import { format } from 'date-fns';
 import api from '../../services/api';
 import type { Leave } from '../../types';
@@ -21,7 +21,6 @@ const LeavesPage: React.FC = () => {
   const [typeFilter, setTypeFilter] = useState('');
   const [action, setAction] = useState<{ leave: Leave; type: 'approve' | 'reject' } | null>(null);
   const [rejectionReason, setRejectionReason] = useState('');
-  const [showApplyForm, setShowApplyForm] = useState(false);
 
   const isEmployee = user?.role === 'office_employee' || user?.role === 'field_employee';
 
@@ -66,7 +65,7 @@ const LeavesPage: React.FC = () => {
           <p className="text-slate-500 text-sm">{leaves.length} requests</p>
         </div>
         {isEmployee && (
-          <button onClick={() => setShowApplyForm(true)} className="btn btn-primary" id="apply-leave-btn">
+          <button className="btn btn-primary" id="apply-leave-btn">
             <Calendar size={18} />
             Apply Leave
           </button>

@@ -6,14 +6,14 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import {
-  Clock, Calendar, CheckCircle, Navigation, MapPin,
-  AlertCircle, ChevronRight, UserCheck, Shield, FileText
+  Clock, Calendar, CheckCircle, Navigation,
+  AlertCircle, ChevronRight, Shield, FileText
 } from 'lucide-react';
 import { format } from 'date-fns';
 import api from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
 import { StatusBadge } from '../../components/ui/StatusBadge';
-import { StatCardSkeleton, TableSkeleton } from '../../components/ui/SkeletonLoader';
+import { TableSkeleton } from '../../components/ui/SkeletonLoader';
 
 const EmployeeDashboardPage: React.FC = () => {
   const { user } = useAuth();
@@ -21,7 +21,7 @@ const EmployeeDashboardPage: React.FC = () => {
   const today = format(new Date(), 'yyyy-MM-dd');
 
   // Fetch today's attendance
-  const { data: todayAttendance, isLoading: todayLoading } = useQuery({
+  const { data: todayAttendance } = useQuery({
     queryKey: ['my-today-attendance', today],
     queryFn: async () => {
       const { data } = await api.get('/attendance', { params: { date: today } });
