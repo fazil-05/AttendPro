@@ -195,6 +195,7 @@ const App: React.FC = () => (
           <AppRoutes />
           <Toaster
             position="top-right"
+            containerStyle={{ zIndex: 9999 }}
             toastOptions={{
               duration: 4000,
               style: {
@@ -203,7 +204,10 @@ const App: React.FC = () => (
                 fontSize: '14px',
                 fontWeight: 500,
               },
+              // Deduplicate identical toasts
+              id: undefined,
             }}
+            gutter={8}
           />
         </AuthProvider>
       </ThemeProvider>

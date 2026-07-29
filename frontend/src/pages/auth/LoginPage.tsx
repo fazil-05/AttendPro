@@ -56,7 +56,8 @@ const LoginPage: React.FC = () => {
       }
     } catch (error: any) {
       const message = error?.response?.data?.message || 'Invalid credentials. Please try again.';
-      toast.error(message);
+      toast.dismiss();
+      toast.error(message, { id: 'login-error' });
     }
   };
 
