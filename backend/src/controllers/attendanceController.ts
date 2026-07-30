@@ -34,15 +34,19 @@ export const checkIn = asyncHandler(async (req: AuthenticatedRequest, res: Respo
     branch_id,
   } = req.body;
 
-  if (!latitude || !longitude) throw createError('GPS coordinates are required', 400);
-  if (!photo_url) throw createError('Selfie photo is required', 400);
-
-  // Get employee's branch for geofencing
+  // Get employee's role & branch for geofencing and photo validation
   const { data: user } = await supabase
     .from('users')
     .select('role, branch_id')
     .eq('id', userId)
     .single();
+
+  if (!latitude || !longitude) throw createError('GPS coordinates are required', 400);
+
+  // Require photo ONLY for field workers
+  if (user?.role === 'field_employee' && !photo_url) {
+    throw createError('Selfie photo is required for field workers', 400);
+  }
 
   const effectiveBranchId = branch_id || user?.branch_id;
 

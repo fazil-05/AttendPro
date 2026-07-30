@@ -1,5 +1,5 @@
 // src/pages/attendance/MarkAttendancePage.tsx
-// Employee attendance marking with GPS + live camera — Clean Light Theme
+// Employee attendance marking with GPS + live camera (photo for field workers, direct GPS for office workers) — Clean Light Theme
 
 import React, { useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
@@ -29,6 +29,8 @@ const MarkAttendancePage: React.FC = () => {
     address: string; distance?: number; withinGeofence?: boolean;
   } | null>(null);
   const [mode, setMode] = useState<'checkin' | 'checkout'>('checkin');
+
+  const isFieldWorker = user?.role === 'field_employee';
 
   // Fetch today's attendance
   const { data: todayAttendance, refetch: refetchToday } = useQuery({
@@ -110,8 +112,14 @@ const MarkAttendancePage: React.FC = () => {
       }
 
       setGpsData({ ...pos, address, distance, withinGeofence });
-      setStep('camera');
-      await startCamera();
+
+      // Field workers require photo capture; Office workers mark directly via GPS
+      if (isFieldWorker) {
+        setStep('camera');
+        await startCamera();
+      } else {
+        setStep('confirming');
+      }
     } catch (err: any) {
       toast.error(err.message || 'Failed to acquire location');
       setStep('idle');
@@ -130,8 +138,12 @@ const MarkAttendancePage: React.FC = () => {
 
   // Handle final submit
   const handleSubmit = () => {
-    if (!gpsData || !capturedImage) {
-      toast.error('Missing location or photo');
+    if (!gpsData) {
+      toast.error('Missing location coordinates');
+      return;
+    }
+    if (isFieldWorker && !capturedImage) {
+      toast.error('Selfie photo is required for field workers');
       return;
     }
 
@@ -140,7 +152,7 @@ const MarkAttendancePage: React.FC = () => {
       longitude: gpsData.longitude,
       accuracy: gpsData.accuracy,
       address: gpsData.address,
-      photo: capturedImage,
+      photo_url: capturedImage || undefined,
     };
 
     if (mode === 'checkin') {
@@ -159,9 +171,9 @@ const MarkAttendancePage: React.FC = () => {
       <div className="text-center">
         <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900">Mark Attendance</h2>
         <p className="text-slate-500 text-xs sm:text-sm mt-1">
-          {user?.role === 'field_employee'
-            ? '📍 Field Visit Check-In (GPS Verified)'
-            : '🏢 Office Geofenced Check-In'}
+          {isFieldWorker
+            ? '📍 Field Visit Check-In (GPS & Photo Verified)'
+            : '🏢 Office Geofenced Check-In (Instant GPS)'}
         </p>
       </div>
 
@@ -262,15 +274,15 @@ const MarkAttendancePage: React.FC = () => {
                       Ready to {mode === 'checkin' ? 'Check In' : 'Check Out'}
                     </h3>
                     <p className="text-slate-500 text-xs sm:text-sm max-w-sm mx-auto">
-                      {mode === 'checkin'
+                      {isFieldWorker
                         ? 'We will verify your GPS location and capture a selfie photo.'
-                        : 'Record your check-out time and current location.'}
+                        : 'We will verify your GPS coordinates against office geofence.'}
                     </p>
                   </div>
 
-                  {user?.role === 'office_employee' && branchData && (
+                  {!isFieldWorker && branchData && (
                     <div className="p-3 rounded-xl bg-blue-50 text-xs text-blue-800 border border-blue-100 font-medium">
-                      📍 Branch Location: <span className="font-bold">{branchData.name}</span> (Geofence Radius: {branchData.radius || 200}m)
+                      📍 Office Branch: <span className="font-bold">{branchData.name}</span> (Geofence Radius: {branchData.radius || 200}m)
                     </div>
                   )}
 
@@ -293,22 +305,15 @@ const MarkAttendancePage: React.FC = () => {
                 </div>
               )}
 
-              {/* STEP: CAMERA */}
-              {step === 'camera' && (
+              {/* STEP: CAMERA (Field Workers Only) */}
+              {step === 'camera' && isFieldWorker && (
                 <div className="space-y-4">
                   {gpsData && (
-                    <div className={`p-3 rounded-xl border text-xs flex items-center justify-between ${
-                      gpsData.withinGeofence
-                        ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
-                        : 'bg-amber-50 text-amber-800 border-amber-200'
-                    }`}>
+                    <div className="p-3 rounded-xl border text-xs bg-blue-50 text-blue-800 border-blue-200 flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <MapPin size={16} />
                         <span className="truncate max-w-[280px] font-medium">{gpsData.address}</span>
                       </div>
-                      {gpsData.distance !== undefined && (
-                        <span className="font-bold">{Math.round(gpsData.distance)}m away</span>
-                      )}
                     </div>
                   )}
 
@@ -332,22 +337,35 @@ const MarkAttendancePage: React.FC = () => {
               {step === 'confirming' && (
                 <div className="space-y-4">
                   <h3 className="font-bold text-slate-900 text-sm">Confirm Attendance Details</h3>
-                  {capturedImage && (
+
+                  {isFieldWorker && capturedImage && (
                     <div className="rounded-2xl overflow-hidden border border-slate-200 aspect-4/3 relative max-w-xs mx-auto">
                       <img src={capturedImage} alt="Selfie" className="w-full h-full object-cover" />
                     </div>
                   )}
+
                   {gpsData && (
-                    <div className="p-3 bg-slate-50 border border-slate-100 rounded-xl space-y-1 text-xs">
-                      <p className="text-slate-700 font-medium">📍 {gpsData.address}</p>
+                    <div className="p-4 bg-slate-50 border border-slate-100 rounded-xl space-y-1.5 text-xs">
+                      <p className="text-slate-800 font-bold flex items-center gap-1.5">
+                        <MapPin size={14} className="text-blue-600" />
+                        {gpsData.address}
+                      </p>
+                      {gpsData.distance !== undefined && (
+                        <p className="text-slate-600 font-medium pl-5">
+                          Distance to office: <span className="font-bold text-slate-900">{Math.round(gpsData.distance)}m</span>
+                        </p>
+                      )}
                     </div>
                   )}
+
                   <div className="flex gap-3">
-                    <button onClick={() => { setStep('camera'); startCamera(); }} className="btn btn-secondary flex-1 text-xs">
-                      Retake Photo
-                    </button>
-                    <button onClick={handleSubmit} disabled={checkInMutation.isPending || checkOutMutation.isPending} className="btn btn-primary flex-1 text-xs">
-                      Submit Attendance
+                    {isFieldWorker && (
+                      <button onClick={() => { setStep('camera'); startCamera(); }} className="btn btn-secondary flex-1 text-xs">
+                        Retake Photo
+                      </button>
+                    )}
+                    <button onClick={handleSubmit} disabled={checkInMutation.isPending || checkOutMutation.isPending} className="btn btn-primary flex-1 text-xs py-3 font-bold">
+                      {checkInMutation.isPending || checkOutMutation.isPending ? 'Submitting...' : 'Confirm & Submit'}
                     </button>
                   </div>
                 </div>
