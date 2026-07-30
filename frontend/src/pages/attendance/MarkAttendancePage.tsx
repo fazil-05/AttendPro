@@ -163,7 +163,6 @@ const MarkAttendancePage: React.FC = () => {
   };
 
   const hasCheckedIn = !!todayAttendance?.check_in;
-  const hasCheckedOut = !!todayAttendance?.check_out;
 
   return (
     <div className="max-w-xl mx-auto space-y-6">
@@ -217,48 +216,55 @@ const MarkAttendancePage: React.FC = () => {
         className="glass-card overflow-hidden bg-white border border-slate-200 shadow-xs"
       >
         {/* Mode Selector */}
-        {!hasCheckedOut && (
-          <div className="flex border-b border-slate-100">
-            <button
-              onClick={() => { setMode('checkin'); setStep('idle'); resetCamera(); }}
-              disabled={hasCheckedIn}
-              className={`flex-1 py-4 text-sm font-bold transition-colors ${mode === 'checkin'
-                ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50'
-                : 'text-slate-500 hover:text-slate-700'
-              } ${hasCheckedIn ? 'opacity-50 cursor-not-allowed' : ''}`}
-            >
-              <Clock size={16} className="inline mr-2" />
-              Check In
-            </button>
-            <button
-              onClick={() => { setMode('checkout'); setStep('idle'); resetCamera(); }}
-              disabled={!hasCheckedIn || hasCheckedOut}
-              className={`flex-1 py-4 text-sm font-bold transition-colors ${mode === 'checkout'
-                ? 'text-green-600 border-b-2 border-green-600 bg-green-50'
-                : 'text-slate-500 hover:text-slate-700'
-              } ${!hasCheckedIn || hasCheckedOut ? 'opacity-50 cursor-not-allowed' : ''}`}
-            >
-              <CheckCircle size={16} className="inline mr-2" />
-              Check Out
-            </button>
-          </div>
-        )}
+        <div className="flex border-b border-slate-100">
+          <button
+            type="button"
+            onClick={() => { setMode('checkin'); setStep('idle'); resetCamera(); }}
+            className={`flex-1 py-4 text-sm font-bold transition-colors ${mode === 'checkin'
+              ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50'
+              : 'text-slate-500 hover:text-slate-700'
+            }`}
+          >
+            <Clock size={16} className="inline mr-2" />
+            Check In
+          </button>
+          <button
+            type="button"
+            onClick={() => { setMode('checkout'); setStep('idle'); resetCamera(); }}
+            className={`flex-1 py-4 text-sm font-bold transition-colors ${mode === 'checkout'
+              ? 'text-green-600 border-b-2 border-green-600 bg-green-50'
+              : 'text-slate-500 hover:text-slate-700'
+            }`}
+          >
+            <CheckCircle size={16} className="inline mr-2" />
+            Check Out
+          </button>
+        </div>
 
         <div className="p-6">
           {/* DONE STATE */}
-          {hasCheckedOut || step === 'done' ? (
+          {step === 'done' ? (
             <div className="text-center py-8 space-y-4">
               <div className="w-20 h-20 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto border border-emerald-100 shadow-xs">
                 <CheckCircle size={40} />
               </div>
               <div>
                 <h3 className="text-xl font-extrabold text-slate-900 mb-1">
-                  Attendance Complete for Today!
+                  {mode === 'checkin' ? 'Check-In Complete!' : 'Check-Out Complete!'}
                 </h3>
                 <p className="text-slate-500 text-sm">
-                  You have successfully checked in and checked out for today.
+                  {mode === 'checkin'
+                    ? 'Your check-in time and GPS location have been recorded.'
+                    : 'Your check-out time and GPS location have been recorded.'}
                 </p>
               </div>
+              <button
+                type="button"
+                onClick={() => { setStep('idle'); resetCamera(); }}
+                className="btn btn-secondary text-xs px-5"
+              >
+                Done
+              </button>
             </div>
           ) : (
             /* WORKFLOW STEPS */

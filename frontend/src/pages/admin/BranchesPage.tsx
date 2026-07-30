@@ -1,11 +1,11 @@
 // src/pages/admin/BranchesPage.tsx
-// Branch management with automatic address-to-coordinate geocoding (no manual lat/lng required)
+// Branch management with automatic address-to-coordinate geocoding — Clean Light Theme
 
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
-import { Plus, Edit, Trash2, ToggleRight, ToggleLeft, MapPin, Users, Building2, Navigation, Loader2 } from 'lucide-react';
+import { Plus, Edit, Trash2, ToggleRight, ToggleLeft, MapPin, Users, Building2, Navigation, Loader2, X } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -108,7 +108,6 @@ const BranchFormModal: React.FC<{
   const onSubmit = async (data: BranchForm) => {
     let finalCoords = coords;
 
-    // Auto-geocode if coordinates haven't been captured yet
     if (!finalCoords && data.address) {
       try {
         setIsGeocoding(true);
@@ -121,7 +120,6 @@ const BranchFormModal: React.FC<{
           finalCoords = { latitude: parseFloat(results[0].lat), longitude: parseFloat(results[0].lon) };
         }
       } catch {
-        // Fallback default coordinates (Hyderabad) if network fails
         finalCoords = { latitude: 17.4474, longitude: 78.3762 };
       } finally {
         setIsGeocoding(false);
@@ -154,58 +152,60 @@ const BranchFormModal: React.FC<{
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+      <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-xs" onClick={onClose} />
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="relative bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-lg p-6 overflow-hidden"
+        className="relative bg-white rounded-2xl shadow-xl w-full max-w-lg p-6 overflow-hidden border border-slate-200"
       >
-        <div className="flex items-center justify-between pb-3 mb-4 border-b border-slate-200 dark:border-slate-700">
+        <div className="flex items-center justify-between pb-3 mb-4 border-b border-slate-100">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400">
+            <div className="p-2.5 rounded-xl bg-blue-50 text-blue-600 border border-blue-100">
               <Building2 size={20} />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-slate-800 dark:text-white">
+              <h2 className="text-lg font-extrabold text-slate-900">
                 {branch ? 'Edit Branch' : 'Create New Branch'}
               </h2>
-              <p className="text-xs text-slate-400">Coordinates are captured automatically from address</p>
+              <p className="text-xs text-slate-500">Configure branch location and geofence parameters</p>
             </div>
           </div>
+          <button onClick={onClose} className="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100">
+            <X size={18} />
+          </button>
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" id="branch-modal-form">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Branch Name *</label>
-              <input {...register('name')} className="form-input" placeholder="e.g. Hyderabad HQ" id="branch-name" />
+              <label className="block text-xs font-bold text-slate-700 mb-1">Branch Name *</label>
+              <input {...register('name')} className="form-input text-xs sm:text-sm" placeholder="e.g. Hyderabad Branch" id="branch-name" />
               {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name.message}</p>}
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Branch Code *</label>
-              <input {...register('code')} className="form-input uppercase" placeholder="e.g. HYD01" id="branch-code" />
+              <label className="block text-xs font-bold text-slate-700 mb-1">Branch Code *</label>
+              <input {...register('code')} className="form-input text-xs sm:text-sm uppercase" placeholder="e.g. HYD01" id="branch-code" />
               {errors.code && <p className="text-red-500 text-xs mt-1">{errors.code.message}</p>}
             </div>
           </div>
 
-          {/* Location Address Search */}
           <div>
-            <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">
-              Location / Office Address *
+            <label className="block text-xs font-bold text-slate-700 mb-1">
+              Office Address / City *
             </label>
             <div className="relative">
               <textarea
                 {...register('address')}
-                className="form-input pr-24"
+                className="form-input text-xs sm:text-sm pr-24"
                 rows={2}
-                placeholder="Enter full office address or landmark (e.g. Hitech City, Hyderabad)"
+                placeholder="e.g. HITEC City, Hyderabad, Telangana"
                 id="branch-address"
               />
               <button
                 type="button"
                 onClick={() => geocodeAddress()}
                 disabled={isGeocoding}
-                className="absolute right-2 bottom-2 btn btn-xs btn-secondary text-xs"
+                className="absolute right-2 bottom-2 px-2.5 py-1 bg-blue-50 text-blue-700 rounded-lg text-xs font-bold hover:bg-blue-100 flex items-center gap-1 border border-blue-200"
               >
                 {isGeocoding ? <Loader2 size={12} className="animate-spin" /> : <Navigation size={12} />}
                 Geocode
@@ -214,45 +214,24 @@ const BranchFormModal: React.FC<{
             {errors.address && <p className="text-red-500 text-xs mt-1">{errors.address.message}</p>}
           </div>
 
-          {/* Auto-Captured Geocode Status */}
-          <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-700 flex items-center justify-between text-xs">
-            <div className="flex items-center gap-2">
-              <MapPin size={16} className="text-blue-500" />
-              <div>
-                <p className="font-semibold text-slate-700 dark:text-slate-300">
-                  {coords ? 'Location Coordinates Captured' : 'Location Not Yet Captured'}
-                </p>
-                <p className="text-slate-400">
-                  {coords
-                    ? `Lat: ${coords.latitude.toFixed(6)}, Lng: ${coords.longitude.toFixed(6)}`
-                    : 'Coordinates will auto-fetch from address on save'}
-                </p>
-              </div>
-            </div>
-
-            <button
-              type="button"
-              onClick={detectGPSLocation}
-              disabled={isGeocoding}
-              className="text-xs text-blue-500 hover:underline flex items-center gap-1 flex-shrink-0"
-            >
-              <Navigation size={12} />
-              Use Current GPS
-            </button>
-          </div>
-
-          {/* Attendance Radius */}
           <div>
-            <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">
-              Geofence Radius (meters) *
-            </label>
-            <input {...register('radius')} type="number" min="50" max="1000" className="form-input" id="branch-radius" />
+            <label className="block text-xs font-bold text-slate-700 mb-1">Geofence Radius (Meters) *</label>
+            <input {...register('radius')} type="number" className="form-input text-xs sm:text-sm" placeholder="200" id="branch-radius" />
             {errors.radius && <p className="text-red-500 text-xs mt-1">{errors.radius.message}</p>}
           </div>
 
-          <div className="flex gap-3 pt-2 border-t border-slate-200 dark:border-slate-700">
-            <button type="button" onClick={onClose} className="btn btn-secondary flex-1">Cancel</button>
-            <button type="submit" disabled={isSubmitting || isGeocoding} className="btn btn-primary flex-1" id="save-branch-btn">
+          {coords && (
+            <div className="p-3 bg-blue-50 border border-blue-100 rounded-xl flex items-center justify-between text-xs">
+              <span className="font-bold text-blue-900">📍 Captured GPS Coordinates:</span>
+              <span className="font-mono text-blue-700 font-bold">{coords.latitude.toFixed(4)}, {coords.longitude.toFixed(4)}</span>
+            </div>
+          )}
+
+          <div className="flex gap-3 justify-end pt-3 border-t border-slate-100">
+            <button type="button" onClick={onClose} className="btn btn-secondary text-xs">
+              Cancel
+            </button>
+            <button type="submit" disabled={isSubmitting || isGeocoding} className="btn btn-primary text-xs px-5 shadow-sm">
               {isSubmitting ? 'Saving...' : branch ? 'Update Branch' : 'Create Branch'}
             </button>
           </div>
@@ -276,21 +255,20 @@ const BranchesPage: React.FC = () => {
     },
   });
 
+  const toggleStatus = useMutation({
+    mutationFn: ({ id, status }: { id: string; status: string }) =>
+      api.put(`/branches/${id}`, { status }),
+    onSuccess: () => {
+      toast.success('Branch status updated');
+      queryClient.invalidateQueries({ queryKey: ['branches'] });
+    },
+  });
+
   const deleteMutation = useMutation({
     mutationFn: (id: string) => api.delete(`/branches/${id}`),
     onSuccess: () => {
       toast.success('Branch deleted');
       setDeleteTarget(null);
-      queryClient.invalidateQueries({ queryKey: ['branches'] });
-    },
-    onError: (err: any) => toast.error(err?.response?.data?.message || 'Failed to delete branch'),
-  });
-
-  const toggleStatus = useMutation({
-    mutationFn: ({ id, status }: { id: string; status: string }) =>
-      api.patch(`/branches/${id}/status`, { status }),
-    onSuccess: () => {
-      toast.success('Branch status updated');
       queryClient.invalidateQueries({ queryKey: ['branches'] });
     },
   });
@@ -302,12 +280,12 @@ const BranchesPage: React.FC = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-bold text-slate-800 dark:text-white">Branches</h2>
-          <p className="text-slate-500 text-sm">{branches.length} branches configured</p>
+          <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900">Branch Locations</h2>
+          <p className="text-slate-500 text-xs sm:text-sm">{branches.length} office branches configured</p>
         </div>
         <button
           onClick={() => { setEditBranch(null); setShowForm(true); }}
-          className="btn btn-primary"
+          className="btn btn-primary shadow-sm"
           id="add-branch-btn"
         >
           <Plus size={18} />
@@ -325,59 +303,65 @@ const BranchesPage: React.FC = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.05 }}
-            className="glass-card p-5 dark:bg-slate-800/50"
+            className="glass-card p-5 bg-white border border-slate-200/80 shadow-xs hover:border-blue-300 transition-all flex flex-col justify-between"
           >
-            <div className="flex items-start justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2.5 rounded-xl bg-blue-50 dark:bg-blue-900/20">
-                  <Building2 size={20} className="text-blue-600 dark:text-blue-400" />
+            <div>
+              <div className="flex items-start justify-between mb-3">
+                <div className="flex items-center gap-3">
+                  <div className="p-3 rounded-2xl bg-blue-50 text-blue-600 border border-blue-100">
+                    <Building2 size={22} />
+                  </div>
+                  <div>
+                    <h3 className="font-extrabold text-slate-900 text-base">{branch.name}</h3>
+                    <span className="font-mono text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200 px-2 py-0.5 rounded">
+                      {branch.code}
+                    </span>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="font-semibold text-slate-800 dark:text-white">{branch.name}</h3>
-                  <span className="text-xs font-mono text-slate-400">{branch.code}</span>
+                <StatusBadge status={branch.status} size="sm" />
+              </div>
+
+              <div className="space-y-2 mb-4">
+                {branch.address && (
+                  <div className="flex items-start gap-2 text-xs text-slate-600 font-medium">
+                    <MapPin size={14} className="mt-0.5 flex-shrink-0 text-blue-600" />
+                    <span className="line-clamp-2">{branch.address}</span>
+                  </div>
+                )}
+                <div className="flex items-center gap-4 text-xs">
+                  <span className="text-blue-700 font-bold bg-blue-50 px-2.5 py-1 rounded-full border border-blue-100">
+                    🎯 Geofence: {branch.radius}m
+                  </span>
+                  {branch.employee_count !== undefined && (
+                    <span className="flex items-center gap-1 font-bold text-slate-700 bg-slate-100 px-2.5 py-1 rounded-full">
+                      <Users size={13} className="text-blue-600" />
+                      {branch.employee_count} employees
+                    </span>
+                  )}
                 </div>
               </div>
-              <StatusBadge status={branch.status} size="sm" />
             </div>
 
-            <div className="space-y-2 mb-4">
-              {branch.address && (
-                <div className="flex items-start gap-2 text-sm text-slate-500 dark:text-slate-400">
-                  <MapPin size={14} className="mt-0.5 flex-shrink-0 text-slate-400" />
-                  <span className="line-clamp-2">{branch.address}</span>
-                </div>
-              )}
-              <div className="flex items-center gap-4 text-xs text-slate-400">
-                <span className="text-blue-500 font-medium">Geofence Radius: {branch.radius}m</span>
-              </div>
-              {branch.employee_count !== undefined && (
-                <div className="flex items-center gap-1.5 text-sm text-slate-500">
-                  <Users size={14} />
-                  <span>{branch.employee_count} employees</span>
-                </div>
-              )}
-            </div>
-
-            <div className="flex items-center gap-2 pt-3 border-t border-slate-200 dark:border-slate-700">
+            <div className="flex items-center gap-2 pt-3 border-t border-slate-100">
               <button
                 onClick={() => { setEditBranch(branch); setShowForm(true); }}
-                className="btn btn-sm btn-secondary flex-1"
+                className="btn btn-sm btn-secondary flex-1 text-xs font-semibold"
               >
                 <Edit size={14} /> Edit
               </button>
               <button
                 onClick={() => toggleStatus.mutate({ id: branch.id, status: branch.status === 'active' ? 'inactive' : 'active' })}
-                className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+                className="p-2 rounded-lg hover:bg-slate-100 text-slate-500 transition-colors"
                 title={branch.status === 'active' ? 'Disable' : 'Enable'}
               >
                 {branch.status === 'active'
-                  ? <ToggleRight size={18} className="text-green-500" />
-                  : <ToggleLeft size={18} className="text-slate-400" />
+                  ? <ToggleRight size={20} className="text-emerald-600" />
+                  : <ToggleLeft size={20} className="text-slate-400" />
                 }
               </button>
               <button
                 onClick={() => setDeleteTarget(branch)}
-                className="p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-slate-400 hover:text-red-500 transition-colors"
+                className="p-2 rounded-lg hover:bg-red-50 text-slate-400 hover:text-red-600 transition-colors"
               >
                 <Trash2 size={16} />
               </button>
@@ -386,10 +370,10 @@ const BranchesPage: React.FC = () => {
         ))}
 
         {!isLoading && branches.length === 0 && (
-          <div className="col-span-full text-center py-16 text-slate-400">
-            <Building2 size={48} className="mx-auto mb-3 opacity-30" />
-            <p className="font-medium">No branches yet</p>
-            <p className="text-sm">Create your first branch to get started</p>
+          <div className="col-span-full text-center py-16 text-slate-400 bg-white border border-slate-200 rounded-2xl">
+            <Building2 size={48} className="mx-auto mb-3 opacity-30 text-blue-500" />
+            <p className="font-bold text-slate-700">No branches configured yet</p>
+            <p className="text-xs text-slate-400 mt-1">Click "+ Add Branch" to set up your first location</p>
           </div>
         )}
       </div>

@@ -14,35 +14,30 @@ import type { DashboardStats } from '../../types';
 import { StatCardSkeleton } from '../../components/ui/SkeletonLoader';
 import { useAuth } from '../../contexts/AuthContext';
 
-// ─── Stat Card ────────────────────────────────────────────
+// ─── Stat Card Component (Clean High-Contrast Light Theme) ─────
 interface StatCardProps {
   title: string;
   value: number | string;
   icon: React.ReactNode;
-  gradient: string;
-  shadowColor: string;
-  change?: string;
+  iconBg: string;
+  iconColor: string;
   delay?: number;
 }
 
-const StatCard: React.FC<StatCardProps> = ({ title, value, icon, gradient, shadowColor, change, delay = 0 }) => (
+const StatCard: React.FC<StatCardProps> = ({ title, value, icon, iconBg, iconColor, delay = 0 }) => (
   <motion.div
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
     transition={{ delay, duration: 0.4 }}
-    className="stat-card"
-    style={{ background: gradient, boxShadow: `0 8px 24px ${shadowColor}` }}
+    className="glass-card p-5 bg-white border border-slate-200/80 shadow-xs flex items-center justify-between hover:border-blue-300 transition-all"
   >
-    <div className="flex items-center justify-between mb-4">
-      <div className="p-2.5 bg-white/20 rounded-xl">
-        {icon}
-      </div>
-      {change && (
-        <span className="text-white/80 text-xs font-medium">{change}</span>
-      )}
+    <div>
+      <p className="text-3xl font-black text-slate-900 mb-1 tracking-tight">{value}</p>
+      <p className="text-slate-500 text-xs font-extrabold uppercase tracking-wider">{title}</p>
     </div>
-    <p className="text-3xl font-black text-white mb-1 tracking-tight">{value}</p>
-    <p className="text-white/90 text-xs font-bold uppercase tracking-wider">{title}</p>
+    <div className={`p-3.5 rounded-2xl ${iconBg} ${iconColor} border border-slate-100 flex-shrink-0 shadow-xs`}>
+      {icon}
+    </div>
   </motion.div>
 );
 
@@ -65,7 +60,7 @@ const DashboardPage: React.FC = () => {
       const { data } = await api.get('/dashboard/stats');
       return data.data as DashboardStats;
     },
-    refetchInterval: 60000,
+    refetchInterval: 15000,
   });
 
   // Fetch today's attendance summary
@@ -75,7 +70,7 @@ const DashboardPage: React.FC = () => {
       const { data } = await api.get('/attendance/today');
       return data.data;
     },
-    refetchInterval: 30000,
+    refetchInterval: 15000,
   });
 
   // Fetch monthly stats for charts
@@ -109,16 +104,16 @@ const DashboardPage: React.FC = () => {
           style={{ background: 'white' }} />
         <div className="absolute right-20 -bottom-10 w-32 h-32 rounded-full opacity-10"
           style={{ background: 'white' }} />
-        <h2 className="text-xl font-bold mb-1">
+        <h2 className="text-xl sm:text-2xl font-extrabold mb-1">
           Good {new Date().getHours() < 12 ? 'Morning' : new Date().getHours() < 17 ? 'Afternoon' : 'Evening'}, {user?.name?.split(' ')[0]}! 👋
         </h2>
-        <p className="text-blue-100 text-sm">
+        <p className="text-blue-100 text-xs sm:text-sm font-medium">
           {new Date().toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
         </p>
       </motion.div>
 
-      {/* Stat Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* Primary Stat Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {statsLoading ? (
           Array.from({ length: 4 }).map((_, i) => <StatCardSkeleton key={i} />)
         ) : (
@@ -126,40 +121,40 @@ const DashboardPage: React.FC = () => {
             <StatCard
               title="Total Employees"
               value={statsData?.total_employees || 0}
-              icon={<Users size={20} className="text-white" />}
-              gradient="linear-gradient(135deg, #3b82f6, #1d4ed8)"
-              shadowColor="rgba(59,130,246,0.25)"
+              icon={<Users size={22} />}
+              iconBg="bg-blue-50"
+              iconColor="text-blue-600"
               delay={0}
             />
             <StatCard
               title="Active Branches"
               value={statsData?.total_branches || 0}
-              icon={<Building2 size={20} className="text-white" />}
-              gradient="linear-gradient(135deg, #8b5cf6, #6d28d9)"
-              shadowColor="rgba(139,92,246,0.25)"
+              icon={<Building2 size={22} />}
+              iconBg="bg-purple-50"
+              iconColor="text-purple-600"
               delay={0.05}
             />
             <StatCard
               title="Present Today"
               value={(statsData?.today_present || 0) + (statsData?.today_late || 0)}
-              icon={<CheckCircle size={20} className="text-white" />}
-              gradient="linear-gradient(135deg, #10b981, #059669)"
-              shadowColor="rgba(16,185,129,0.25)"
+              icon={<CheckCircle size={22} />}
+              iconBg="bg-emerald-50"
+              iconColor="text-emerald-600"
               delay={0.1}
             />
             <StatCard
               title="Absent Today"
               value={statsData?.today_absent || 0}
-              icon={<UserX size={20} className="text-white" />}
-              gradient="linear-gradient(135deg, #ef4444, #dc2626)"
-              shadowColor="rgba(239,68,68,0.25)"
+              icon={<UserX size={22} />}
+              iconBg="bg-red-50"
+              iconColor="text-red-600"
               delay={0.15}
             />
           </>
         )}
       </div>
 
-      {/* Secondary Stats */}
+      {/* Secondary Stat Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -171,7 +166,7 @@ const DashboardPage: React.FC = () => {
             <Clock size={20} />
           </div>
           <div>
-            <p className="text-2xl font-bold text-slate-900">{statsData?.today_late || 0}</p>
+            <p className="text-2xl font-extrabold text-slate-900">{statsData?.today_late || 0}</p>
             <p className="text-slate-500 text-xs font-semibold">Late Today</p>
           </div>
         </motion.div>
@@ -186,7 +181,7 @@ const DashboardPage: React.FC = () => {
             <Calendar size={20} />
           </div>
           <div>
-            <p className="text-2xl font-bold text-slate-900">{statsData?.today_on_leave || 0}</p>
+            <p className="text-2xl font-extrabold text-slate-900">{statsData?.today_on_leave || 0}</p>
             <p className="text-slate-500 text-xs font-semibold">On Leave</p>
           </div>
         </motion.div>
@@ -201,7 +196,7 @@ const DashboardPage: React.FC = () => {
             <UserCheck size={20} />
           </div>
           <div>
-            <p className="text-2xl font-bold text-slate-900">{statsData?.today_half_day || 0}</p>
+            <p className="text-2xl font-extrabold text-slate-900">{statsData?.today_half_day || 0}</p>
             <p className="text-slate-500 text-xs font-semibold">Half Day</p>
           </div>
         </motion.div>
@@ -216,7 +211,7 @@ const DashboardPage: React.FC = () => {
             <CheckCircle size={20} />
           </div>
           <div>
-            <p className="text-2xl font-bold text-slate-900">
+            <p className="text-2xl font-extrabold text-slate-900">
               {statsData?.total_employees
                 ? Math.round(((statsData.today_present + statsData.today_late) / statsData.total_employees) * 100)
                 : 0}%
@@ -305,8 +300,8 @@ const DashboardPage: React.FC = () => {
               </div>
             </>
           ) : (
-            <div className="h-40 flex items-center justify-center text-slate-400 text-sm">
-              No attendance data for today
+            <div className="h-40 flex items-center justify-center text-slate-400 text-sm font-medium">
+              No attendance data recorded for today yet
             </div>
           )}
         </motion.div>
@@ -371,7 +366,7 @@ const DashboardPage: React.FC = () => {
                 </tr>
               )) || (
                 <tr>
-                  <td colSpan={6} className="text-center py-8 text-slate-400">
+                  <td colSpan={6} className="text-center py-8 text-slate-400 font-medium">
                     No attendance records for today yet
                   </td>
                 </tr>
