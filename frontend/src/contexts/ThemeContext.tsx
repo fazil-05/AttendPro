@@ -1,9 +1,9 @@
 // src/contexts/ThemeContext.tsx
-// Clean White & Royal Blue Theme Context
+// Pure Clean Light Theme Context
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
-type Theme = 'light' | 'dark';
+type Theme = 'light';
 
 interface ThemeContextType {
   theme: Theme;
@@ -13,21 +13,20 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setTheme] = useState<Theme>(() => {
-    // Default to clean light mode
-    return 'light';
-  });
+  const [theme] = useState<Theme>('light');
 
   useEffect(() => {
-    localStorage.setItem('theme', theme);
-    if (theme === 'dark') {
-      document.body.classList.add('dark');
-    } else {
-      document.body.classList.remove('dark');
-    }
-  }, [theme]);
+    localStorage.setItem('theme', 'light');
+    document.body.classList.remove('dark');
+    document.documentElement.classList.remove('dark');
+  }, []);
 
-  const toggleTheme = () => setTheme(t => t === 'light' ? 'dark' : 'light');
+  const toggleTheme = () => {
+    // Pure light theme enforcement
+    localStorage.setItem('theme', 'light');
+    document.body.classList.remove('dark');
+    document.documentElement.classList.remove('dark');
+  };
 
   return (
     <ThemeContext.Provider value={{ theme, toggleTheme }}>
