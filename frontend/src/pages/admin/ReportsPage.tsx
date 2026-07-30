@@ -1,5 +1,5 @@
 // src/pages/admin/ReportsPage.tsx
-// Reports and analytics with export capabilities
+// Reports and analytics with export capabilities — Clean Light Theme
 
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
@@ -9,7 +9,6 @@ import {
   Tooltip, ResponsiveContainer, Legend,
 } from 'recharts';
 import { Download, FileText, TrendingUp } from 'lucide-react';
-import { format } from 'date-fns';
 import api from '../../services/api';
 import { TableSkeleton } from '../../components/ui/SkeletonLoader';
 import { StatusBadge } from '../../components/ui/StatusBadge';
@@ -55,239 +54,132 @@ const ReportsPage: React.FC = () => {
   // CSV Export
   const exportCSV = () => {
     if (!data || data.length === 0) return;
-    const isMonthly = reportType === 'monthly';
-
-    const headers = isMonthly
-      ? ['Employee', 'Employee ID', 'Present', 'Late', 'Absent', 'Half Day', 'Leave', 'Working Hours']
-      : ['Date', 'Employee', 'Employee ID', 'Check In', 'Check Out', 'Working Hours', 'Status', 'Distance'];
-
-    const rows = data.map((item: any) => {
-      if (isMonthly) {
-        return [
-          item.employee?.name, item.employee?.employee_id,
-          item.present, item.late, item.absent, item.half_day, item.leave,
-          item.total_working_hours?.toFixed(1),
-        ].join(',');
-      }
-      return [
-        item.date,
-        item.employee?.name, item.employee?.employee_id,
-        item.check_in ? format(new Date(item.check_in), 'HH:mm') : '',
-        item.check_out ? format(new Date(item.check_out), 'HH:mm') : '',
-        item.working_hours || '',
-        item.status,
-        item.distance ? `${item.distance}m` : '',
-      ].join(',');
-    });
-
-    const csv = [headers.join(','), ...rows].join('\n');
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `attendance-report-${reportType}-${date || `${year}-${month}`}.csv`;
-    a.click();
+    const headers = Object.keys(data[0]).join(',');
+    const rows = data.map((row: any) => Object.values(row).map(v => `"${v || ''}"`).join(','));
+    const csvContent = 'data:text/csv;charset=utf-8,' + [headers, ...rows].join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `attendance_report_${reportType}_${date}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold text-slate-800 dark:text-white">Reports & Analytics</h2>
-          <p className="text-slate-500 text-sm">Generate and export attendance reports</p>
+          <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900">Reports & Analytics</h2>
+          <p className="text-slate-500 text-xs sm:text-sm">Generate, view, and export attendance records</p>
         </div>
-        <button onClick={exportCSV} className="btn btn-secondary" id="export-csv-btn">
-          <Download size={16} />
-          Export CSV
+        <button onClick={exportCSV} disabled={!data || data.length === 0} className="btn btn-primary shadow-xs">
+          <Download size={18} /> Export CSV
         </button>
       </div>
 
       {/* Report Type Selector */}
-      <div className="glass-card p-1 dark:bg-slate-800/50 flex gap-1 flex-wrap">
+      <div className="glass-card p-1.5 bg-white border border-slate-200 shadow-xs flex gap-1 flex-wrap rounded-xl">
         {(['daily', 'monthly', 'late', 'absent'] as ReportType[]).map(type => (
           <button
             key={type}
             onClick={() => setReportType(type)}
-            className={`flex-1 py-2.5 px-4 rounded-xl text-sm font-medium transition-all capitalize ${
+            className={`px-4 py-2 rounded-lg text-xs font-bold capitalize transition-all ${
               reportType === type
-                ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/25'
-                : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
+                ? 'bg-blue-600 text-white shadow-xs'
+                : 'text-slate-600 hover:bg-slate-100'
             }`}
-            id={`report-type-${type}`}
           >
             {type} Report
           </button>
         ))}
       </div>
 
-      {/* Date Filters */}
-      <div className="glass-card p-4 dark:bg-slate-800/50 flex flex-wrap gap-3 items-center">
+      {/* Filter Controls */}
+      <div className="glass-card p-4 bg-white border border-slate-200 shadow-xs flex flex-wrap gap-3 items-center">
         {reportType === 'monthly' ? (
           <>
-            <div>
-              <label className="block text-xs text-slate-500 mb-1">Month</label>
-              <select value={month} onChange={e => setMonth(e.target.value)} className="form-input w-36" id="report-month">
-                {Array.from({ length: 12 }, (_, i) => {
-                  const m = String(i + 1).padStart(2, '0');
-                  return <option key={m} value={m}>{new Date(2024, i).toLocaleString('default', { month: 'long' })}</option>;
-                })}
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs text-slate-500 mb-1">Year</label>
-              <select value={year} onChange={e => setYear(e.target.value)} className="form-input w-28" id="report-year">
-                {['2023', '2024', '2025', '2026'].map(y => <option key={y}>{y}</option>)}
-              </select>
-            </div>
+            <select value={month} onChange={e => setMonth(e.target.value)} className="form-input w-36">
+              {Array.from({ length: 12 }, (_, i) => (
+                <option key={i + 1} value={String(i + 1).padStart(2, '0')}>
+                  {new Date(0, i).toLocaleString('default', { month: 'long' })}
+                </option>
+              ))}
+            </select>
+            <select value={year} onChange={e => setYear(e.target.value)} className="form-input w-28">
+              {['2024', '2025', '2026'].map(y => (
+                <option key={y} value={y}>{y}</option>
+              ))}
+            </select>
           </>
         ) : (
-          <div>
-            <label className="block text-xs text-slate-500 mb-1">Date</label>
-            <input
-              type="date"
-              value={date}
-              onChange={e => setDate(e.target.value)}
-              className="form-input"
-              id="report-date"
-            />
-          </div>
+          <input
+            type="date"
+            value={date}
+            onChange={e => setDate(e.target.value)}
+            className="form-input w-44"
+          />
         )}
       </div>
 
-      {/* Monthly Chart */}
-      {reportType === 'monthly' && (
+      {/* Chart Section */}
+      {monthlyChart && monthlyChart.length > 0 && (
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="glass-card p-6 dark:bg-slate-800/50"
+          className="glass-card p-6 bg-white border border-slate-200 shadow-xs"
         >
-          <h3 className="font-semibold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
-            <TrendingUp size={18} className="text-blue-500" />
-            Monthly Trend
-          </h3>
+          <div className="flex items-center gap-2 mb-4">
+            <TrendingUp size={20} className="text-blue-600" />
+            <h3 className="font-extrabold text-slate-900 text-base">Attendance Trend</h3>
+          </div>
           <ResponsiveContainer width="100%" height={220}>
             <LineChart data={monthlyChart}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-              <XAxis dataKey="date" tick={{ fontSize: 11 }} tickFormatter={v => new Date(v).getDate().toString()} />
-              <YAxis tick={{ fontSize: 11 }} />
-              <Tooltip />
-              <Legend />
-              <Line type="monotone" dataKey="present" stroke="#10b981" strokeWidth={2} dot={false} name="Present" />
-              <Line type="monotone" dataKey="late" stroke="#f59e0b" strokeWidth={2} dot={false} name="Late" />
-              <Line type="monotone" dataKey="absent" stroke="#ef4444" strokeWidth={2} dot={false} name="Absent" />
+              <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+              <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#64748b' }} tickFormatter={v => new Date(v).getDate().toString()} />
+              <YAxis tick={{ fontSize: 11, fill: '#64748b' }} />
+              <Tooltip contentStyle={{ borderRadius: 10, border: '1px solid #e2e8f0', backgroundColor: '#ffffff' }} />
+              <Legend iconType="circle" iconSize={8} />
+              <Line type="monotone" dataKey="present" stroke="#10b981" strokeWidth={2.5} name="Present" />
+              <Line type="monotone" dataKey="late" stroke="#f59e0b" strokeWidth={2} name="Late" />
+              <Line type="monotone" dataKey="absent" stroke="#ef4444" strokeWidth={2} name="Absent" />
             </LineChart>
           </ResponsiveContainer>
         </motion.div>
       )}
 
-      {/* Report Table */}
+      {/* Data Table */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="glass-card overflow-hidden dark:bg-slate-800/50"
+        className="glass-card overflow-hidden bg-white border border-slate-200 shadow-xs"
       >
-        <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
-          <h3 className="font-semibold text-slate-800 dark:text-white capitalize">{reportType} Attendance Data</h3>
-        </div>
-
         {isLoading ? (
-          <div className="p-4"><TableSkeleton rows={6} cols={6} /></div>
+          <div className="p-4"><TableSkeleton rows={8} /></div>
         ) : !data || data.length === 0 ? (
-          <div className="py-12 text-center text-slate-400">
-            <FileText size={40} className="mx-auto mb-2 opacity-30" />
-            <p>No data for the selected period</p>
-          </div>
-        ) : reportType === 'monthly' ? (
-          <div className="overflow-x-auto">
-            <table>
-              <thead>
-                <tr>
-                  <th>Employee</th>
-                  <th>Present</th>
-                  <th>Late</th>
-                  <th>Absent</th>
-                  <th>Half Day</th>
-                  <th>Leave</th>
-                  <th>Working Hours</th>
-                  <th>Rate</th>
-                </tr>
-              </thead>
-              <tbody>
-                {(data as any[]).map((row: any) => {
-                  const totalDays = row.present + row.late + row.absent + row.half_day + row.leave || 1;
-                  const rate = Math.round(((row.present + row.late) / totalDays) * 100);
-                  return (
-                    <tr key={row.employee?.id}>
-                      <td>
-                        <div className="flex items-center gap-2">
-                          <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white text-xs font-bold">
-                            {row.employee?.name?.charAt(0)}
-                          </div>
-                          <div>
-                            <p className="font-medium text-sm">{row.employee?.name}</p>
-                            <p className="text-xs text-slate-400">{row.employee?.employee_id}</p>
-                          </div>
-                        </div>
-                      </td>
-                      <td><span className="text-green-600 font-medium">{row.present}</span></td>
-                      <td><span className="text-amber-600 font-medium">{row.late}</span></td>
-                      <td><span className="text-red-600 font-medium">{row.absent}</span></td>
-                      <td><span className="text-indigo-600 font-medium">{row.half_day}</span></td>
-                      <td><span className="text-purple-600 font-medium">{row.leave}</span></td>
-                      <td className="font-medium">{row.total_working_hours?.toFixed(1)}h</td>
-                      <td>
-                        <div className="flex items-center gap-2">
-                          <div className="flex-1 bg-slate-200 dark:bg-slate-700 rounded-full h-1.5 max-w-16">
-                            <div className="bg-green-500 h-1.5 rounded-full" style={{ width: `${rate}%` }} />
-                          </div>
-                          <span className="text-xs font-medium">{rate}%</span>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+          <div className="p-12 text-center text-slate-400">
+            <FileText size={48} className="mx-auto mb-3 text-slate-300" />
+            <p className="font-semibold text-slate-700">No report records found</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table>
               <thead>
                 <tr>
-                  <th>Employee</th>
-                  <th>Date</th>
-                  <th>Check In</th>
-                  <th>Check Out</th>
-                  <th>Hours</th>
-                  <th>Status</th>
-                  <th>Distance</th>
+                  {Object.keys(data[0]).map(key => (
+                    <th key={key} className="capitalize">{key.replace(/_/g, ' ')}</th>
+                  ))}
                 </tr>
               </thead>
               <tbody>
-                {(data as any[]).map((row: any) => (
-                  <tr key={row.id}>
-                    <td>
-                      <div className="flex items-center gap-2">
-                        <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white text-xs font-bold">
-                          {row.employee?.name?.charAt(0)}
-                        </div>
-                        <div>
-                          <p className="font-medium text-sm">{row.employee?.name}</p>
-                          <p className="text-xs text-slate-400">{row.employee?.employee_id}</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="text-sm">{format(new Date(row.date), 'dd MMM yyyy')}</td>
-                    <td className="text-sm font-medium">
-                      {row.check_in ? format(new Date(row.check_in), 'HH:mm') : '—'}
-                    </td>
-                    <td className="text-sm text-slate-500">
-                      {row.check_out ? format(new Date(row.check_out), 'HH:mm') : '—'}
-                    </td>
-                    <td className="text-sm">{row.working_hours ? `${row.working_hours}h` : '—'}</td>
-                    <td><StatusBadge status={row.status} size="sm" /></td>
-                    <td className="text-sm text-slate-500">{row.distance ? `${row.distance}m` : '—'}</td>
+                {data.map((row: any, i: number) => (
+                  <tr key={i}>
+                    {Object.entries(row).map(([k, v]: [string, any], j: number) => (
+                      <td key={j} className="text-sm font-medium text-slate-800">
+                        {k === 'status' ? <StatusBadge status={String(v) as any} size="sm" /> : String(v || '—')}
+                      </td>
+                    ))}
                   </tr>
                 ))}
               </tbody>

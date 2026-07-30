@@ -1,5 +1,5 @@
 // src/components/ui/ConfirmDialog.tsx
-// Confirmation modal dialog
+// Confirmation modal dialog — Clean Light Theme
 
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -23,9 +23,9 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
   onConfirm, onCancel, isLoading = false,
 }) => {
   const iconColors = {
-    danger: 'text-red-500 bg-red-50',
-    warning: 'text-amber-500 bg-amber-50',
-    info: 'text-blue-500 bg-blue-50',
+    danger: 'text-red-600 bg-red-50 border border-red-100',
+    warning: 'text-amber-600 bg-amber-50 border border-amber-100',
+    info: 'text-blue-600 bg-blue-50 border border-blue-100',
   };
 
   const btnClasses = {
@@ -43,21 +43,20 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+            className="absolute inset-0 bg-slate-900/40 backdrop-blur-xs"
             onClick={onCancel}
           />
 
           {/* Dialog */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            initial={{ opacity: 0, scale: 0.95, y: 10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            className="relative glass-card p-6 w-full max-w-md dark:bg-slate-800"
-            style={{ background: 'white' }}
+            exit={{ opacity: 0, scale: 0.95, y: 10 }}
+            className="relative glass-card p-6 w-full max-w-md bg-white border border-slate-200 shadow-xl rounded-2xl"
           >
             <button
               onClick={onCancel}
-              className="absolute top-4 right-4 p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+              className="absolute top-4 right-4 p-1.5 rounded-lg hover:bg-slate-100 transition-colors"
             >
               <X size={18} className="text-slate-400" />
             </button>
@@ -67,8 +66,8 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
                 <AlertTriangle size={22} />
               </div>
               <div className="flex-1 min-w-0">
-                <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-1">{title}</h3>
-                <p className="text-sm text-slate-500 dark:text-slate-400">{message}</p>
+                <h3 className="text-lg font-bold text-slate-900 mb-1">{title}</h3>
+                <p className="text-sm text-slate-500">{message}</p>
               </div>
             </div>
 

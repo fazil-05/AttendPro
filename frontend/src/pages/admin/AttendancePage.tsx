@@ -1,5 +1,5 @@
 // src/pages/admin/AttendancePage.tsx
-// Attendance overview table for admin/manager
+// Attendance overview table for admin/manager — Clean Light Theme
 
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
@@ -32,12 +32,12 @@ const AttendancePage: React.FC = () => {
   return (
     <div className="space-y-5">
       <div>
-        <h2 className="text-xl font-bold text-slate-800 dark:text-white">Attendance Overview</h2>
-        <p className="text-slate-500 text-sm">{total} records</p>
+        <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900">Attendance Overview</h2>
+        <p className="text-slate-500 text-xs sm:text-sm">{total} records</p>
       </div>
 
       {/* Filters */}
-      <div className="glass-card p-4 dark:bg-slate-800/50 flex flex-wrap gap-3">
+      <div className="glass-card p-4 bg-white border border-slate-200 shadow-xs flex flex-wrap gap-3">
         <input
           type="date"
           value={date}
@@ -65,7 +65,7 @@ const AttendancePage: React.FC = () => {
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="glass-card overflow-hidden dark:bg-slate-800/50"
+        className="glass-card overflow-hidden bg-white border border-slate-200 shadow-xs"
       >
         {isLoading ? (
           <div className="p-4"><TableSkeleton rows={8} cols={7} /></div>
@@ -96,38 +96,38 @@ const AttendancePage: React.FC = () => {
                     <tr key={record.id}>
                       <td>
                         <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white text-xs font-bold">
+                          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white text-xs font-bold shadow-xs">
                             {(record.employee as any)?.name?.charAt(0)}
                           </div>
                           <div>
-                            <p className="font-medium text-sm text-slate-800 dark:text-white">
+                            <p className="font-bold text-sm text-slate-900">
                               {(record.employee as any)?.name}
                             </p>
-                            <p className="text-xs text-slate-400">{(record.employee as any)?.employee_id}</p>
+                            <p className="text-xs text-slate-400 font-mono">{(record.employee as any)?.employee_id}</p>
                           </div>
                         </div>
                       </td>
-                      <td className="text-sm text-slate-500">{format(new Date(record.date), 'dd MMM yyyy')}</td>
+                      <td className="text-sm text-slate-600">{format(new Date(record.date), 'dd MMM yyyy')}</td>
                       <td>
-                        <span className="text-sm font-medium text-slate-800 dark:text-white">
+                        <span className="text-sm font-bold text-slate-900">
                           {record.check_in ? format(new Date(record.check_in), 'HH:mm') : '—'}
                         </span>
                       </td>
-                      <td className="text-sm text-slate-500">
+                      <td className="text-sm text-slate-600">
                         {record.check_out ? format(new Date(record.check_out), 'HH:mm')
-                          : record.check_in ? <span className="live-pulse text-green-500 text-xs">Live</span>
+                          : record.check_in ? <span className="live-pulse text-green-600 text-xs font-bold">Live</span>
                           : '—'}
                       </td>
-                      <td className="text-sm">{record.working_hours ? `${record.working_hours}h` : '—'}</td>
+                      <td className="text-sm font-medium text-slate-700">{record.working_hours ? `${record.working_hours}h` : '—'}</td>
                       <td><StatusBadge status={record.status} size="sm" /></td>
-                      <td className="text-sm text-slate-500">{record.distance ? `${record.distance}m` : '—'}</td>
+                      <td className="text-sm text-slate-500 font-mono">{record.distance ? `${record.distance}m` : '—'}</td>
                       <td>
                         {record.check_in_latitude && (
                           <a
                             href={`https://maps.google.com/?q=${record.check_in_latitude},${record.check_in_longitude}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-xs text-blue-500 hover:underline"
+                            className="text-xs font-semibold text-blue-600 hover:underline"
                           >
                             View Map
                           </a>
@@ -139,8 +139,8 @@ const AttendancePage: React.FC = () => {
               </table>
             </div>
             {totalPages > 1 && (
-              <div className="px-6 py-4 border-t border-slate-200 dark:border-slate-700 flex items-center justify-between">
-                <p className="text-sm text-slate-500">Page {page} of {totalPages}</p>
+              <div className="px-6 py-4 border-t border-slate-100 flex items-center justify-between">
+                <p className="text-sm text-slate-500 font-medium">Page {page} of {totalPages}</p>
                 <div className="flex gap-2">
                   <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="btn btn-sm btn-secondary">Prev</button>
                   <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} className="btn btn-sm btn-secondary">Next</button>

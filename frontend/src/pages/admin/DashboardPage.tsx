@@ -1,5 +1,5 @@
 // src/pages/admin/DashboardPage.tsx
-// Super Admin / Manager Dashboard with stats and charts
+// Super Admin / Manager Dashboard with stats and charts — Clean Light Theme
 
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
@@ -38,11 +38,11 @@ const StatCard: React.FC<StatCardProps> = ({ title, value, icon, gradient, shado
         {icon}
       </div>
       {change && (
-        <span className="text-white/70 text-xs font-medium">{change}</span>
+        <span className="text-white/80 text-xs font-medium">{change}</span>
       )}
     </div>
-    <p className="text-3xl font-bold text-white mb-1">{value}</p>
-    <p className="text-white/70 text-sm">{title}</p>
+    <p className="text-3xl font-black text-white mb-1 tracking-tight">{value}</p>
+    <p className="text-white/90 text-xs font-bold uppercase tracking-wider">{title}</p>
   </motion.div>
 );
 
@@ -102,8 +102,8 @@ const DashboardPage: React.FC = () => {
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="rounded-2xl p-6 text-white overflow-hidden relative"
-        style={{ background: 'linear-gradient(135deg, #1e40af 0%, #3b82f6 50%, #06b6d4 100%)' }}
+        className="rounded-2xl p-6 text-white overflow-hidden relative shadow-md"
+        style={{ background: 'linear-gradient(135deg, #1d4ed8 0%, #2563eb 50%, #3b82f6 100%)' }}
       >
         <div className="absolute -right-10 -top-10 w-48 h-48 rounded-full opacity-10"
           style={{ background: 'white' }} />
@@ -128,7 +128,7 @@ const DashboardPage: React.FC = () => {
               value={statsData?.total_employees || 0}
               icon={<Users size={20} className="text-white" />}
               gradient="linear-gradient(135deg, #3b82f6, #1d4ed8)"
-              shadowColor="rgba(59,130,246,0.3)"
+              shadowColor="rgba(59,130,246,0.25)"
               delay={0}
             />
             <StatCard
@@ -136,7 +136,7 @@ const DashboardPage: React.FC = () => {
               value={statsData?.total_branches || 0}
               icon={<Building2 size={20} className="text-white" />}
               gradient="linear-gradient(135deg, #8b5cf6, #6d28d9)"
-              shadowColor="rgba(139,92,246,0.3)"
+              shadowColor="rgba(139,92,246,0.25)"
               delay={0.05}
             />
             <StatCard
@@ -144,7 +144,7 @@ const DashboardPage: React.FC = () => {
               value={(statsData?.today_present || 0) + (statsData?.today_late || 0)}
               icon={<CheckCircle size={20} className="text-white" />}
               gradient="linear-gradient(135deg, #10b981, #059669)"
-              shadowColor="rgba(16,185,129,0.3)"
+              shadowColor="rgba(16,185,129,0.25)"
               delay={0.1}
             />
             <StatCard
@@ -152,7 +152,7 @@ const DashboardPage: React.FC = () => {
               value={statsData?.today_absent || 0}
               icon={<UserX size={20} className="text-white" />}
               gradient="linear-gradient(135deg, #ef4444, #dc2626)"
-              shadowColor="rgba(239,68,68,0.3)"
+              shadowColor="rgba(239,68,68,0.25)"
               delay={0.15}
             />
           </>
@@ -165,14 +165,14 @@ const DashboardPage: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="glass-card p-5 flex items-center gap-4 dark:bg-slate-800/50"
+          className="glass-card p-5 flex items-center gap-4 bg-white border border-slate-200/80 shadow-xs"
         >
-          <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-900/20">
-            <Clock size={20} className="text-amber-600 dark:text-amber-400" />
+          <div className="p-3 rounded-xl bg-amber-50 text-amber-600 border border-amber-100">
+            <Clock size={20} />
           </div>
           <div>
-            <p className="text-2xl font-bold text-slate-800 dark:text-white">{statsData?.today_late || 0}</p>
-            <p className="text-slate-500 dark:text-slate-400 text-sm">Late Today</p>
+            <p className="text-2xl font-bold text-slate-900">{statsData?.today_late || 0}</p>
+            <p className="text-slate-500 text-xs font-semibold">Late Today</p>
           </div>
         </motion.div>
 
@@ -180,14 +180,14 @@ const DashboardPage: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.25 }}
-          className="glass-card p-5 flex items-center gap-4 dark:bg-slate-800/50"
+          className="glass-card p-5 flex items-center gap-4 bg-white border border-slate-200/80 shadow-xs"
         >
-          <div className="p-3 rounded-xl bg-indigo-50 dark:bg-indigo-900/20">
-            <Calendar size={20} className="text-indigo-600 dark:text-indigo-400" />
+          <div className="p-3 rounded-xl bg-indigo-50 text-indigo-600 border border-indigo-100">
+            <Calendar size={20} />
           </div>
           <div>
-            <p className="text-2xl font-bold text-slate-800 dark:text-white">{statsData?.today_on_leave || 0}</p>
-            <p className="text-slate-500 dark:text-slate-400 text-sm">On Leave</p>
+            <p className="text-2xl font-bold text-slate-900">{statsData?.today_on_leave || 0}</p>
+            <p className="text-slate-500 text-xs font-semibold">On Leave</p>
           </div>
         </motion.div>
 
@@ -195,14 +195,14 @@ const DashboardPage: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="glass-card p-5 flex items-center gap-4 dark:bg-slate-800/50"
+          className="glass-card p-5 flex items-center gap-4 bg-white border border-slate-200/80 shadow-xs"
         >
-          <div className="p-3 rounded-xl bg-purple-50 dark:bg-purple-900/20">
-            <UserCheck size={20} className="text-purple-600 dark:text-purple-400" />
+          <div className="p-3 rounded-xl bg-purple-50 text-purple-600 border border-purple-100">
+            <UserCheck size={20} />
           </div>
           <div>
-            <p className="text-2xl font-bold text-slate-800 dark:text-white">{statsData?.today_half_day || 0}</p>
-            <p className="text-slate-500 dark:text-slate-400 text-sm">Half Day</p>
+            <p className="text-2xl font-bold text-slate-900">{statsData?.today_half_day || 0}</p>
+            <p className="text-slate-500 text-xs font-semibold">Half Day</p>
           </div>
         </motion.div>
 
@@ -210,18 +210,18 @@ const DashboardPage: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.35 }}
-          className="glass-card p-5 flex items-center gap-4 dark:bg-slate-800/50"
+          className="glass-card p-5 flex items-center gap-4 bg-white border border-slate-200/80 shadow-xs"
         >
-          <div className="p-3 rounded-xl bg-green-50 dark:bg-green-900/20">
-            <CheckCircle size={20} className="text-green-600 dark:text-green-400" />
+          <div className="p-3 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100">
+            <CheckCircle size={20} />
           </div>
           <div>
-            <p className="text-2xl font-bold text-slate-800 dark:text-white">
+            <p className="text-2xl font-bold text-slate-900">
               {statsData?.total_employees
                 ? Math.round(((statsData.today_present + statsData.today_late) / statsData.total_employees) * 100)
                 : 0}%
             </p>
-            <p className="text-slate-500 dark:text-slate-400 text-sm">Attendance Rate</p>
+            <p className="text-slate-500 text-xs font-semibold">Attendance Rate</p>
           </div>
         </motion.div>
       </div>
@@ -233,25 +233,25 @@ const DashboardPage: React.FC = () => {
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.4 }}
-          className="lg:col-span-2 glass-card p-6 dark:bg-slate-800/50"
+          className="lg:col-span-2 glass-card p-6 bg-white border border-slate-200/80 shadow-xs"
         >
-          <h3 className="text-base font-semibold text-slate-800 dark:text-white mb-4">
+          <h3 className="text-base font-extrabold text-slate-900 mb-4">
             Monthly Attendance Overview
           </h3>
           <ResponsiveContainer width="100%" height={240}>
             <BarChart data={monthlyStats?.chartData?.slice(-14) || []}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+              <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
               <XAxis
                 dataKey="date"
-                tick={{ fontSize: 11, fill: '#94a3b8' }}
+                tick={{ fontSize: 11, fill: '#64748b' }}
                 tickFormatter={v => new Date(v).getDate().toString()}
               />
-              <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} />
+              <YAxis tick={{ fontSize: 11, fill: '#64748b' }} />
               <Tooltip
                 contentStyle={{
-                  borderRadius: 10, border: 'none',
-                  boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
-                  fontSize: 12,
+                  borderRadius: 10, border: '1px solid #e2e8f0',
+                  boxShadow: '0 8px 24px rgba(0,0,0,0.08)',
+                  fontSize: 12, backgroundColor: '#ffffff',
                 }}
               />
               <Legend iconType="circle" iconSize={8} />
@@ -267,9 +267,9 @@ const DashboardPage: React.FC = () => {
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.45 }}
-          className="glass-card p-6 dark:bg-slate-800/50"
+          className="glass-card p-6 bg-white border border-slate-200/80 shadow-xs"
         >
-          <h3 className="text-base font-semibold text-slate-800 dark:text-white mb-4">
+          <h3 className="text-base font-extrabold text-slate-900 mb-4">
             Today's Summary
           </h3>
           {pieData.length > 0 ? (
@@ -297,9 +297,9 @@ const DashboardPage: React.FC = () => {
                   <div key={item.name} className="flex items-center justify-between text-sm">
                     <div className="flex items-center gap-2">
                       <div className="w-2.5 h-2.5 rounded-full" style={{ background: item.color }} />
-                      <span className="text-slate-600 dark:text-slate-400">{item.name}</span>
+                      <span className="text-slate-600 font-medium">{item.name}</span>
                     </div>
-                    <span className="font-semibold text-slate-800 dark:text-white">{item.value}</span>
+                    <span className="font-bold text-slate-900">{item.value}</span>
                   </div>
                 ))}
               </div>
@@ -317,11 +317,11 @@ const DashboardPage: React.FC = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.5 }}
-        className="glass-card dark:bg-slate-800/50"
+        className="glass-card bg-white border border-slate-200/80 shadow-xs"
       >
-        <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
-          <h3 className="text-base font-semibold text-slate-800 dark:text-white">Today's Recent Attendance</h3>
-          <span className="text-xs text-slate-500 dark:text-slate-400">
+        <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+          <h3 className="text-base font-extrabold text-slate-900">Today's Recent Attendance</h3>
+          <span className="text-xs font-semibold text-slate-500">
             {todayData?.records?.length || 0} records
           </span>
         </div>
@@ -342,22 +342,22 @@ const DashboardPage: React.FC = () => {
                 <tr key={record.id}>
                   <td>
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white text-xs font-bold">
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white text-xs font-bold shadow-xs">
                         {record.employee?.name?.charAt(0)}
                       </div>
                       <div>
-                        <p className="font-medium text-slate-800 dark:text-white text-sm">{record.employee?.name}</p>
-                        <p className="text-slate-400 text-xs">{record.employee?.employee_id}</p>
+                        <p className="font-bold text-slate-900 text-sm">{record.employee?.name}</p>
+                        <p className="text-slate-400 text-xs font-mono">{record.employee?.employee_id}</p>
                       </div>
                     </div>
                   </td>
-                  <td className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                  <td className="text-sm font-semibold text-slate-800">
                     {record.check_in ? new Date(record.check_in).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) : '—'}
                   </td>
-                  <td className="text-sm text-slate-500 dark:text-slate-400">
-                    {record.check_out ? new Date(record.check_out).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) : <span className="live-pulse text-green-500 text-xs">Live</span>}
+                  <td className="text-sm text-slate-600">
+                    {record.check_out ? new Date(record.check_out).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) : <span className="live-pulse text-green-600 text-xs font-semibold">Live</span>}
                   </td>
-                  <td className="text-sm text-slate-600 dark:text-slate-400">
+                  <td className="text-sm font-medium text-slate-700">
                     {record.working_hours ? `${record.working_hours}h` : '—'}
                   </td>
                   <td>
@@ -365,7 +365,7 @@ const DashboardPage: React.FC = () => {
                       {record.status.replace('_', ' ')}
                     </span>
                   </td>
-                  <td className="text-sm text-slate-500 dark:text-slate-400">
+                  <td className="text-sm text-slate-500 font-mono">
                     {record.distance ? `${record.distance}m` : '—'}
                   </td>
                 </tr>

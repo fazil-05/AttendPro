@@ -1,5 +1,5 @@
 // src/pages/employee/EmployeeDashboardPage.tsx
-// Dedicated dashboard portal for Office and Field Employees
+// Dedicated dashboard portal for Office and Field Employees — Clean Light Theme
 
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -48,62 +48,59 @@ const EmployeeDashboardPage: React.FC = () => {
   });
 
   // Calculate monthly stats from history
-  const monthlyRecords = historyData || [];
-  const presentCount = monthlyRecords.filter((r: any) => r.status === 'present').length;
-  const lateCount = monthlyRecords.filter((r: any) => r.status === 'late').length;
-  const absentCount = monthlyRecords.filter((r: any) => r.status === 'absent').length;
-  const leaveCount = monthlyRecords.filter((r: any) => r.status === 'leave').length;
+  const monthlyLogs = historyData || [];
+  const daysPresent = monthlyLogs.filter((a: any) => a.status === 'present' || a.status === 'late').length;
+  const daysLate = monthlyLogs.filter((a: any) => a.status === 'late').length;
+  const daysAbsent = monthlyLogs.filter((a: any) => a.status === 'absent').length;
 
+  const isFieldEmployee = user?.role === 'field_employee';
   const hasCheckedIn = !!todayAttendance?.check_in;
   const hasCheckedOut = !!todayAttendance?.check_out;
 
   return (
     <div className="space-y-6">
-      {/* Employee Welcome Card */}
+      {/* Welcome Banner */}
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="rounded-2xl p-6 text-white overflow-hidden relative"
-        style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e3a8a 50%, #2563eb 100%)' }}
+        className="rounded-2xl p-6 text-white overflow-hidden relative shadow-md"
+        style={{ background: 'linear-gradient(135deg, #1d4ed8 0%, #2563eb 50%, #3b82f6 100%)' }}
       >
-        <div className="absolute -right-10 -top-10 w-48 h-48 rounded-full opacity-10" style={{ background: 'white' }} />
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative z-10">
           <div>
-            <div className="flex items-center gap-2 mb-2">
-              <span className="px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider bg-white/10 border border-white/20">
-                {user?.role?.replace('_', ' ')}
-              </span>
-              <span className="text-xs text-blue-200">ID: {user?.employee_id || 'EMP-USER'}</span>
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/20 text-xs font-semibold mb-2">
+              <Shield size={13} />
+              {isFieldEmployee ? 'Field Employee Portal' : 'Office Employee Portal'}
             </div>
-            <h2 className="text-2xl font-bold mb-1">
-              Welcome, {user?.name}! 👋
+            <h2 className="text-xl sm:text-2xl font-bold">
+              Welcome back, {user?.name}! 👋
             </h2>
-            <p className="text-blue-200 text-sm">
-              {format(new Date(), 'EEEE, MMMM d, yyyy')}
+            <p className="text-blue-100 text-sm mt-1">
+              {format(new Date(), 'EEEE, dd MMMM yyyy')} • {(user as any)?.branch?.name || (user as any)?.branches?.name || 'Main HQ'}
             </p>
           </div>
 
+          {/* Quick Action Button */}
           <button
             onClick={() => navigate('/mark-attendance')}
-            className="btn bg-white text-blue-700 hover:bg-blue-50 font-bold shadow-lg"
-            id="quick-mark-attendance-btn"
+            className="btn bg-white text-blue-700 hover:bg-blue-50 font-bold px-6 py-3 shadow-lg flex items-center justify-center gap-2"
           >
-            <Navigation size={18} />
-            {hasCheckedOut ? 'View Today\'s Entry' : hasCheckedIn ? 'Mark Check-Out' : 'Mark Check-In Now'}
+            <Navigation size={18} className="text-blue-600 animate-pulse" />
+            {hasCheckedOut ? 'View Today Status' : hasCheckedIn ? 'Clock Out Now' : 'Clock In Now'}
           </button>
         </div>
       </motion.div>
 
-      {/* Today's Status Banner */}
+      {/* Today Status Widget */}
       <motion.div
-        initial={{ opacity: 0, y: 15 }}
+        initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
-        className="glass-card p-6 dark:bg-slate-800/50"
+        className="glass-card p-6 bg-white border border-slate-200/80 shadow-xs"
       >
-        <div className="flex items-center justify-between mb-4 border-b border-slate-200 dark:border-slate-700 pb-3">
-          <h3 className="font-bold text-slate-800 dark:text-white flex items-center gap-2">
-            <Clock size={18} className="text-blue-500" />
+        <div className="flex items-center justify-between mb-4 border-b border-slate-100 pb-3">
+          <h3 className="font-bold text-slate-900 flex items-center gap-2">
+            <Clock size={18} className="text-blue-600" />
             Today's Attendance Status
           </h3>
           {todayAttendance?.status && (
@@ -112,27 +109,27 @@ const EmployeeDashboardPage: React.FC = () => {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/40 text-center">
-            <p className="text-xs text-slate-400 mb-1">Check In Time</p>
-            <p className="text-lg font-bold text-slate-800 dark:text-white">
+          <div className="p-4 rounded-xl bg-slate-50 border border-slate-100 text-center">
+            <p className="text-xs text-slate-500 font-semibold mb-1">Check In Time</p>
+            <p className="text-lg font-bold text-slate-900">
               {todayAttendance?.check_in
                 ? format(new Date(todayAttendance.check_in), 'hh:mm a')
                 : 'Not Checked In'}
             </p>
           </div>
 
-          <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/40 text-center">
-            <p className="text-xs text-slate-400 mb-1">Check Out Time</p>
-            <p className="text-lg font-bold text-slate-800 dark:text-white">
+          <div className="p-4 rounded-xl bg-slate-50 border border-slate-100 text-center">
+            <p className="text-xs text-slate-500 font-semibold mb-1">Check Out Time</p>
+            <p className="text-lg font-bold text-slate-900">
               {todayAttendance?.check_out
                 ? format(new Date(todayAttendance.check_out), 'hh:mm a')
-                : hasCheckedIn ? <span className="live-pulse text-green-500 text-sm font-semibold">Active Working</span> : '—'}
+                : hasCheckedIn ? <span className="live-pulse text-green-600 text-sm font-bold">Active Working</span> : '—'}
             </p>
           </div>
 
-          <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/40 text-center">
-            <p className="text-xs text-slate-400 mb-1">Total Hours</p>
-            <p className="text-lg font-bold text-slate-800 dark:text-white">
+          <div className="p-4 rounded-xl bg-slate-50 border border-slate-100 text-center">
+            <p className="text-xs text-slate-500 font-semibold mb-1">Total Hours</p>
+            <p className="text-lg font-bold text-slate-900">
               {todayAttendance?.working_hours ? `${todayAttendance.working_hours} hrs` : '—'}
             </p>
           </div>
@@ -141,91 +138,74 @@ const EmployeeDashboardPage: React.FC = () => {
 
       {/* Monthly Summary Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.15 }}
-          className="stat-card"
-          style={{ background: 'linear-gradient(135deg, #10b981, #059669)', boxShadow: '0 8px 24px rgba(16,185,129,0.25)' }}
-        >
-          <div className="flex items-center justify-between mb-2">
-            <CheckCircle size={20} className="text-white" />
-            <span className="text-white/80 text-xs font-semibold">Present</span>
+        <div className="glass-card p-4 bg-white border border-slate-200/80 shadow-xs flex items-center gap-3">
+          <div className="p-2.5 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100">
+            <CheckCircle size={20} />
           </div>
-          <p className="text-3xl font-bold text-white">{presentCount}</p>
-          <p className="text-white/70 text-xs mt-1">Days this month</p>
-        </motion.div>
+          <div>
+            <p className="text-xl font-bold text-slate-900">{daysPresent}</p>
+            <p className="text-xs text-slate-500 font-semibold">Days Attended</p>
+          </div>
+        </div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="stat-card"
-          style={{ background: 'linear-gradient(135deg, #f59e0b, #d97706)', boxShadow: '0 8px 24px rgba(245,158,11,0.25)' }}
-        >
-          <div className="flex items-center justify-between mb-2">
-            <Clock size={20} className="text-white" />
-            <span className="text-white/80 text-xs font-semibold">Late</span>
+        <div className="glass-card p-4 bg-white border border-slate-200/80 shadow-xs flex items-center gap-3">
+          <div className="p-2.5 rounded-xl bg-amber-50 text-amber-600 border border-amber-100">
+            <Clock size={20} />
           </div>
-          <p className="text-3xl font-bold text-white">{lateCount}</p>
-          <p className="text-white/70 text-xs mt-1">Days this month</p>
-        </motion.div>
+          <div>
+            <p className="text-xl font-bold text-slate-900">{daysLate}</p>
+            <p className="text-xs text-slate-500 font-semibold">Late Arrivals</p>
+          </div>
+        </div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.25 }}
-          className="stat-card"
-          style={{ background: 'linear-gradient(135deg, #ef4444, #dc2626)', boxShadow: '0 8px 24px rgba(239,68,68,0.25)' }}
-        >
-          <div className="flex items-center justify-between mb-2">
-            <AlertCircle size={20} className="text-white" />
-            <span className="text-white/80 text-xs font-semibold">Absent</span>
+        <div className="glass-card p-4 bg-white border border-slate-200/80 shadow-xs flex items-center gap-3">
+          <div className="p-2.5 rounded-xl bg-red-50 text-red-600 border border-red-100">
+            <AlertCircle size={20} />
           </div>
-          <p className="text-3xl font-bold text-white">{absentCount}</p>
-          <p className="text-white/70 text-xs mt-1">Days this month</p>
-        </motion.div>
+          <div>
+            <p className="text-xl font-bold text-slate-900">{daysAbsent}</p>
+            <p className="text-xs text-slate-500 font-semibold">Days Absent</p>
+          </div>
+        </div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="stat-card"
-          style={{ background: 'linear-gradient(135deg, #8b5cf6, #6d28d9)', boxShadow: '0 8px 24px rgba(139,92,246,0.25)' }}
-        >
-          <div className="flex items-center justify-between mb-2">
-            <Calendar size={20} className="text-white" />
-            <span className="text-white/80 text-xs font-semibold">Leaves</span>
+        <div className="glass-card p-4 bg-white border border-slate-200/80 shadow-xs flex items-center gap-3">
+          <div className="p-2.5 rounded-xl bg-purple-50 text-purple-600 border border-purple-100">
+            <Calendar size={20} />
           </div>
-          <p className="text-3xl font-bold text-white">{leaveCount}</p>
-          <p className="text-white/70 text-xs mt-1">Approved leaves</p>
-        </motion.div>
+          <div>
+            <p className="text-xl font-bold text-slate-900">{leavesData.length}</p>
+            <p className="text-xs text-slate-500 font-semibold">Leave Applications</p>
+          </div>
+        </div>
       </div>
 
-      {/* Main Grid: Recent Attendance + Leave Applications */}
+      {/* Main Content Grid: Attendance Logs + Leave Widget */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Recent Attendance Table */}
+        {/* Attendance Logs Table */}
         <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.35 }}
-          className="lg:col-span-2 glass-card overflow-hidden dark:bg-slate-800/50"
+          initial={{ opacity: 0, x: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="lg:col-span-2 glass-card overflow-hidden bg-white border border-slate-200/80 shadow-xs"
         >
-          <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
-            <h3 className="font-semibold text-slate-800 dark:text-white">Recent Attendance Logs</h3>
+          <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+            <h3 className="font-bold text-slate-900">Recent Attendance Logs</h3>
             <button
               onClick={() => navigate('/my-attendance')}
-              className="text-xs text-blue-500 hover:underline flex items-center gap-1"
+              className="text-xs text-blue-600 font-semibold hover:underline flex items-center gap-1"
             >
-              View Full History <ChevronRight size={14} />
+              View All <ChevronRight size={14} />
             </button>
           </div>
 
           {historyLoading ? (
-            <div className="p-4"><TableSkeleton rows={5} cols={5} /></div>
+            <div className="p-4"><TableSkeleton rows={5} /></div>
+          ) : monthlyLogs.length === 0 ? (
+            <div className="p-8 text-center text-slate-400">
+              No attendance logs found
+            </div>
           ) : (
-            <div className="table-container border-0">
-              <table>
+            <div className="overflow-x-auto">
+              <table className="w-full">
                 <thead>
                   <tr>
                     <th>Date</th>
@@ -236,87 +216,82 @@ const EmployeeDashboardPage: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {monthlyRecords.length === 0 ? (
-                    <tr>
-                      <td colSpan={5} className="text-center py-8 text-slate-400">
-                        No recent attendance records
+                  {monthlyLogs.map((log: any) => (
+                    <tr key={log.id}>
+                      <td className="font-semibold text-sm text-slate-900">
+                        {format(new Date(log.date), 'dd MMM yyyy')}
+                      </td>
+                      <td className="text-sm font-medium text-slate-700">
+                        {log.check_in ? format(new Date(log.check_in), 'hh:mm a') : '—'}
+                      </td>
+                      <td className="text-sm text-slate-600">
+                        {log.check_out ? format(new Date(log.check_out), 'hh:mm a') : '—'}
+                      </td>
+                      <td className="text-sm text-slate-600 font-medium">
+                        {log.working_hours ? `${log.working_hours}h` : '—'}
+                      </td>
+                      <td>
+                        <StatusBadge status={log.status} size="sm" />
                       </td>
                     </tr>
-                  ) : (
-                    monthlyRecords.slice(0, 7).map((rec: any) => (
-                      <tr key={rec.id}>
-                        <td className="font-medium text-sm text-slate-800 dark:text-white">
-                          {format(new Date(rec.date), 'dd MMM yyyy')}
-                        </td>
-                        <td className="text-sm">
-                          {rec.check_in ? format(new Date(rec.check_in), 'hh:mm a') : '—'}
-                        </td>
-                        <td className="text-sm">
-                          {rec.check_out ? format(new Date(rec.check_out), 'hh:mm a') : '—'}
-                        </td>
-                        <td className="text-sm">{rec.working_hours ? `${rec.working_hours}h` : '—'}</td>
-                        <td><StatusBadge status={rec.status} size="sm" /></td>
-                      </tr>
-                    ))
-                  )}
+                  ))}
                 </tbody>
               </table>
             </div>
           )}
         </motion.div>
 
-        {/* My Leaves Side Panel */}
+        {/* Quick Leave Request & Summary Widget */}
         <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.4 }}
-          className="glass-card p-6 dark:bg-slate-800/50 flex flex-col justify-between"
+          initial={{ opacity: 0, x: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="glass-card p-6 bg-white border border-slate-200/80 shadow-xs flex flex-col justify-between"
         >
           <div>
-            <div className="flex items-center justify-between mb-4 border-b border-slate-200 dark:border-slate-700 pb-3">
-              <h3 className="font-semibold text-slate-800 dark:text-white flex items-center gap-2">
-                <FileText size={18} className="text-purple-500" />
-                My Leaves
+            <div className="flex items-center justify-between mb-4 border-b border-slate-100 pb-3">
+              <h3 className="font-bold text-slate-900 flex items-center gap-2">
+                <FileText size={18} className="text-purple-600" />
+                Recent Leaves
               </h3>
               <button
                 onClick={() => navigate('/leaves')}
-                className="btn btn-sm btn-secondary text-xs"
+                className="text-xs text-blue-600 font-semibold hover:underline"
               >
                 Apply Leave
               </button>
             </div>
 
-            <div className="space-y-3">
-              {(leavesData as any[])?.length === 0 ? (
-                <div className="text-center py-8 text-slate-400 text-sm">
-                  No leave requests submitted yet
-                </div>
-              ) : (
-                (leavesData as any[])?.slice(0, 4).map((leave: any) => (
+            {leavesData.length === 0 ? (
+              <div className="py-6 text-center text-slate-400 text-sm">
+                No leave requests filed yet
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {leavesData.map((leave: any) => (
                   <div
                     key={leave.id}
-                    className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/40 flex items-center justify-between text-sm"
+                    className="p-3 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-between text-sm"
                   >
                     <div>
-                      <p className="font-semibold text-slate-800 dark:text-white capitalize">
-                        {leave.leave_type} Leave
-                      </p>
-                      <p className="text-xs text-slate-400">
-                        {format(new Date(leave.from_date), 'MMM d')} – {format(new Date(leave.to_date), 'MMM d')}
+                      <p className="font-bold text-slate-900 capitalize">{leave.leave_type} Leave</p>
+                      <p className="text-xs text-slate-500 font-medium mt-0.5">
+                        {format(new Date(leave.start_date), 'dd MMM')} - {format(new Date(leave.end_date), 'dd MMM')}
                       </p>
                     </div>
                     <StatusBadge status={leave.status} size="sm" />
                   </div>
-                ))
-              )}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
 
-          <div className="pt-4 border-t border-slate-200 dark:border-slate-700 mt-4">
-            <div className="flex items-center gap-2 text-xs text-slate-400">
-              <Shield size={14} className="text-green-500" />
-              <span>Location & selfie verification active for all check-ins.</span>
-            </div>
+          <div className="pt-4 border-t border-slate-100 mt-4">
+            <button
+              onClick={() => navigate('/leaves')}
+              className="btn btn-secondary w-full justify-center text-xs"
+            >
+              Request New Leave
+            </button>
           </div>
         </motion.div>
       </div>

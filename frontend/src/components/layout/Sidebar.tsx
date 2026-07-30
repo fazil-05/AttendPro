@@ -1,5 +1,5 @@
 // src/components/layout/Sidebar.tsx
-// Collapsible sidebar navigation
+// Collapsible sidebar navigation — Clean White & Royal Blue Light Theme
 
 import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
@@ -10,8 +10,7 @@ import {
   BarChart3, Navigation, Menu,
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
-import { useTheme } from '../../contexts/ThemeContext';
-import { Sun, Moon } from 'lucide-react';
+import { Sun } from 'lucide-react';
 
 interface NavItem {
   label: string;
@@ -36,11 +35,25 @@ const navItems: NavItem[] = [
   { label: 'Settings', icon: <Settings size={20} />, path: '/settings', roles: ['super_admin'] },
 ];
 
-export const Sidebar: React.FC = () => {
-  const [collapsed, setCollapsed] = useState(false);
+interface SidebarProps {
+  collapsed?: boolean;
+  onToggleCollapse?: () => void;
+}
+
+export const Sidebar: React.FC<SidebarProps> = ({ collapsed: propsCollapsed, onToggleCollapse }) => {
+  const [internalCollapsed, setInternalCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const { user, logout } = useAuth();
-  const { theme, toggleTheme } = useTheme();
+
+  const collapsed = propsCollapsed !== undefined ? propsCollapsed : internalCollapsed;
+
+  const handleToggle = () => {
+    if (onToggleCollapse) {
+      onToggleCollapse();
+    } else {
+      setInternalCollapsed(c => !c);
+    }
+  };
 
   const filteredItems = navItems.filter(item =>
     user?.role && item.roles.includes(user.role)
@@ -60,7 +73,7 @@ export const Sidebar: React.FC = () => {
           </div>
         )}
         <button
-          onClick={() => setCollapsed(c => !c)}
+          onClick={handleToggle}
           className="ml-auto p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition-colors hidden md:flex"
         >
           {collapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
@@ -87,15 +100,14 @@ export const Sidebar: React.FC = () => {
 
       {/* Footer */}
       <div className="p-4 border-t border-slate-100 space-y-2">
-        {/* Theme toggle */}
-        <button
-          onClick={toggleTheme}
+        {/* Theme indicator */}
+        <div
           className="sidebar-nav-item w-full"
-          title={collapsed ? (theme === 'light' ? 'Dark Mode' : 'Light Mode') : undefined}
+          title={collapsed ? 'Light Mode Active' : undefined}
         >
-          {theme === 'light' ? <Moon size={18} className="text-slate-500" /> : <Sun size={18} className="text-amber-500" />}
-          {!collapsed && <span className="text-xs font-medium text-slate-600">{theme === 'light' ? 'Dark Mode' : 'Light Mode'}</span>}
-        </button>
+          <Sun size={18} className="text-amber-500" />
+          {!collapsed && <span className="text-xs font-semibold text-slate-700">Clean Light Mode</span>}
+        </div>
 
         {/* User info */}
         <div className="flex items-center gap-3 p-2 bg-slate-50 rounded-xl border border-slate-100">
@@ -132,7 +144,7 @@ export const Sidebar: React.FC = () => {
 
       {/* Mobile Hamburger */}
       <button
-        className="md:hidden fixed top-4 left-4 z-50 p-2 rounded-lg bg-slate-800 text-white shadow-lg"
+        className="md:hidden fixed top-4 left-4 z-50 p-2 rounded-lg bg-white border border-slate-200 text-slate-800 shadow-md"
         onClick={() => setMobileOpen(true)}
       >
         <Menu size={20} />
@@ -146,7 +158,7 @@ export const Sidebar: React.FC = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="md:hidden fixed inset-0 bg-black/60 z-40"
+              className="md:hidden fixed inset-0 bg-black/30 backdrop-blur-xs z-40"
               onClick={() => setMobileOpen(false)}
             />
             <motion.div

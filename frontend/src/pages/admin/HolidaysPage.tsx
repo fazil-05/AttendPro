@@ -1,4 +1,4 @@
-// src/pages/admin/HolidaysPage.tsx
+// src/pages/admin/HolidaysPage.tsx — Clean Light Theme
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
@@ -29,15 +29,15 @@ const typeIcons = {
 };
 
 const typeColors: Record<string, string> = {
-  national: 'bg-red-50 border-red-200 dark:bg-red-900/10 dark:border-red-800',
-  regional: 'bg-blue-50 border-blue-200 dark:bg-blue-900/10 dark:border-blue-800',
-  festival: 'bg-amber-50 border-amber-200 dark:bg-amber-900/10 dark:border-amber-800',
-  optional: 'bg-green-50 border-green-200 dark:bg-green-900/10 dark:border-green-800',
+  national: 'bg-red-50 border-red-200 text-red-700',
+  regional: 'bg-blue-50 border-blue-200 text-blue-700',
+  festival: 'bg-amber-50 border-amber-200 text-amber-700',
+  optional: 'bg-emerald-50 border-emerald-200 text-emerald-700',
 };
 
 const HolidaysPage: React.FC = () => {
   const queryClient = useQueryClient();
-  const [year, setYear] = useState(new Date().getFullYear().toString());
+  const [year] = useState(new Date().getFullYear().toString());
   const [showForm, setShowForm] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Holiday | null>(null);
 
@@ -77,92 +77,91 @@ const HolidaysPage: React.FC = () => {
     <div className="space-y-5">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-bold text-slate-800 dark:text-white">Holiday Management</h2>
-          <p className="text-slate-500 text-sm">{holidays?.length || 0} holidays in {year}</p>
+          <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900">Company Holidays</h2>
+          <p className="text-slate-500 text-xs sm:text-sm">{holidays?.length || 0} holidays in {year}</p>
         </div>
-        <div className="flex gap-2">
-          <select value={year} onChange={e => setYear(e.target.value)} className="form-input w-28" id="holiday-year">
-            {['2024', '2025', '2026'].map(y => <option key={y}>{y}</option>)}
-          </select>
-          <button onClick={() => setShowForm(s => !s)} className="btn btn-primary" id="add-holiday-btn">
-            <Plus size={18} /> Add Holiday
-          </button>
-        </div>
+        <button onClick={() => setShowForm(true)} className="btn btn-primary" id="add-holiday-btn">
+          <Plus size={18} /> Add Holiday
+        </button>
       </div>
 
-      {/* Form */}
+      {/* Add Holiday Form Modal */}
       {showForm && (
-        <motion.div
-          initial={{ opacity: 0, height: 0 }}
-          animate={{ opacity: 1, height: 'auto' }}
-          className="glass-card p-5 dark:bg-slate-800/50"
-        >
-          <h3 className="font-semibold text-slate-800 dark:text-white mb-4">Add New Holiday</h3>
-          <form onSubmit={handleSubmit(d => createMutation.mutate(d))} className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-            <div>
-              <input {...register('name')} placeholder="Holiday name" className="form-input" id="holiday-name" />
-              {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name.message}</p>}
-            </div>
-            <div>
-              <input {...register('date')} type="date" className="form-input" id="holiday-date" />
-              {errors.date && <p className="text-red-500 text-xs mt-1">{errors.date.message}</p>}
-            </div>
-            <div>
-              <select {...register('type')} className="form-input" id="holiday-type">
-                <option value="national">National</option>
-                <option value="regional">Regional</option>
-                <option value="festival">Festival</option>
-                <option value="optional">Optional</option>
-              </select>
-            </div>
-            <button type="submit" disabled={isSubmitting} className="btn btn-primary" id="save-holiday-btn">
-              {isSubmitting ? 'Saving...' : 'Add Holiday'}
-            </button>
-          </form>
-        </motion.div>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-xs" onClick={() => setShowForm(false)} />
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="relative glass-card p-6 bg-white border border-slate-200 rounded-2xl w-full max-w-md shadow-xl"
+          >
+            <h3 className="text-lg font-bold text-slate-900 mb-4">Add Holiday</h3>
+            <form onSubmit={handleSubmit(d => createMutation.mutate(d))} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Holiday Name *</label>
+                <input {...register('name')} className="form-input" placeholder="e.g. Independence Day" />
+                {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name.message}</p>}
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Date *</label>
+                  <input type="date" {...register('date')} className="form-input" />
+                  {errors.date && <p className="text-red-500 text-xs mt-1">{errors.date.message}</p>}
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Type *</label>
+                  <select {...register('type')} className="form-input capitalize">
+                    <option value="national">National</option>
+                    <option value="regional">Regional</option>
+                    <option value="festival">Festival</option>
+                    <option value="optional">Optional</option>
+                  </select>
+                </div>
+              </div>
+              <div className="flex gap-3 justify-end pt-2">
+                <button type="button" onClick={() => setShowForm(false)} className="btn btn-secondary text-xs">Cancel</button>
+                <button type="submit" disabled={isSubmitting} className="btn btn-primary text-xs">Save Holiday</button>
+              </div>
+            </form>
+          </motion.div>
+        </div>
       )}
 
-      {/* Holiday Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {holidays?.map((h, i) => (
+      {/* Grid of Holidays */}
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+        {holidays?.map(h => (
           <motion.div
             key={h.id}
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.04 }}
-            className={`glass-card p-4 border ${typeColors[h.type]} dark:bg-slate-800/50`}
+            className={`glass-card p-4 bg-white border ${typeColors[h.type]} rounded-xl shadow-xs flex items-center justify-between`}
           >
-            <div className="flex items-start justify-between">
-              <div className="flex items-center gap-2 mb-2">
-                {typeIcons[h.type as keyof typeof typeIcons]}
-                <span className="text-xs font-medium text-slate-500 capitalize">{h.type}</span>
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 rounded-xl bg-white shadow-xs border border-slate-100">
+                {typeIcons[h.type]}
               </div>
-              <button
-                onClick={() => setDeleteTarget(h)}
-                className="p-1 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-slate-300 hover:text-red-500 transition-colors"
-              >
-                <Trash2 size={14} />
-              </button>
+              <div>
+                <h4 className="font-bold text-slate-900 text-sm">{h.name}</h4>
+                <p className="text-xs text-slate-500 font-medium">
+                  {format(new Date(h.date), 'EEEE, dd MMMM yyyy')}
+                </p>
+              </div>
             </div>
-            <h3 className="font-semibold text-slate-800 dark:text-white">{h.name}</h3>
-            <p className="text-sm text-slate-500 mt-1">
-              <Calendar size={13} className="inline mr-1" />
-              {format(new Date(h.date), 'EEEE, MMMM d, yyyy')}
-            </p>
-            {h.description && <p className="text-xs text-slate-400 mt-1">{h.description}</p>}
+            <button
+              onClick={() => setDeleteTarget(h)}
+              className="p-1.5 rounded-lg text-red-500 hover:bg-red-50 transition-colors"
+            >
+              <Trash2 size={16} />
+            </button>
           </motion.div>
         ))}
       </div>
 
       <ConfirmDialog
         isOpen={!!deleteTarget}
-        title="Remove Holiday"
-        message={`Remove "${deleteTarget?.name}" from holidays?`}
-        variant="danger"
-        confirmLabel="Remove"
+        title="Delete Holiday"
+        message={`Delete "${deleteTarget?.name}"?`}
         onConfirm={() => deleteTarget && deleteMutation.mutate(deleteTarget.id)}
         onCancel={() => setDeleteTarget(null)}
-        isLoading={deleteMutation.isPending}
       />
     </div>
   );
