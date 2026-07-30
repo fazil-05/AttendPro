@@ -110,7 +110,7 @@ const LeavesPage: React.FC = () => {
               <Calendar size={48} className="mx-auto mb-3 text-slate-300" />
               <p className="text-slate-500">No leave requests found</p>
             </div>
-          ) : leaves.map((leave, idx) => (
+          ) : (leaves as Leave[]).map((leave: Leave, idx: number) => (
             <motion.div
               key={leave.id}
               initial={{ opacity: 0, x: -10 }}

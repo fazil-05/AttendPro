@@ -6,8 +6,9 @@
     "node": "22.x"
   },
   "scripts": {
-    "build": "cd frontend && npm ci && npm run build",
-    "dev:frontend": "cd frontend && npm run dev",
+    "dev": "concurrently -k -p \"[{name}]\" -n \"FRONTEND,BACKEND\" -c \"cyan,magenta\" \"npm run dev:frontend\" \"npm run dev:backend\"",
+    "build": "cd frontend && npm install && npm run build",
+    "dev:frontend": "cd frontend && npm run dev:vite",
     "dev:backend": "cd backend && npm run dev"
   },
   "dependencies": {
@@ -38,7 +39,9 @@
     "@types/nodemailer": "^6.4.14",
     "@types/uuid": "^9.0.7",
     "@types/ws": "^8.18.1",
-    "typescript": "^5.3.2",
-    "ts-node": "^10.9.2"
+    "concurrently": "^9.2.4",
+    "ts-node": "^10.9.2",
+    "tsx": "^4.23.1",
+    "typescript": "^5.3.2"
   }
 }

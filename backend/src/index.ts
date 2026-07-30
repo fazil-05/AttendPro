@@ -7,7 +7,11 @@ import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
 
-// Load environment variables
+import path from 'path';
+
+// Load environment variables from backend directory, root directory, or CWD
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
+dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 dotenv.config();
 
 import authRoutes from './routes/auth';

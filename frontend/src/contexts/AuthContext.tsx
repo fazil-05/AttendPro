@@ -1,9 +1,9 @@
 // src/contexts/AuthContext.tsx
-// Authentication context with JWT token management
+// Authentication Context — connects to Express API backend (/api/auth)
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import type { User, AuthState } from '../types';
 import api from '../services/api';
+import type { User, AuthState } from '../types';
 
 interface AuthContextType extends AuthState {
   login: (email: string, password: string) => Promise<void>;
@@ -36,11 +36,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } else {
       setState(prev => ({ ...prev, isLoading: false }));
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const login = useCallback(async (email: string, password: string) => {
-    const { data } = await api.post('/auth/login', { email, password });
-    const { token, user } = data.data;
+    const response = await api.post('/auth/login', { email, password });
+    const { token, user } = response.data.data;
 
     localStorage.setItem('auth_token', token);
     localStorage.setItem('auth_user', JSON.stringify(user));
@@ -56,8 +57,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const refreshUser = useCallback(async () => {
     try {
-      const { data } = await api.get('/auth/me');
-      const user = data.data as User;
+      const response = await api.get('/auth/me');
+      const user = response.data.data;
       localStorage.setItem('auth_user', JSON.stringify(user));
       setState(prev => ({ ...prev, user }));
     } catch {

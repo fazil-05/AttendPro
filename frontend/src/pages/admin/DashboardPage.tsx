@@ -65,7 +65,7 @@ const DashboardPage: React.FC = () => {
       const { data } = await api.get('/dashboard/stats');
       return data.data as DashboardStats;
     },
-    refetchInterval: 60000, // Refresh every minute
+    refetchInterval: 60000,
   });
 
   // Fetch today's attendance summary
