@@ -47,8 +47,11 @@ const EmployeeDashboardPage: React.FC = () => {
     },
   });
 
-  // Calculate monthly stats from history
+  // Safe fallback arrays
   const monthlyLogs = historyData || [];
+  const leaves = leavesData || [];
+
+  // Calculate monthly stats from history
   const daysPresent = monthlyLogs.filter((a: any) => a.status === 'present' || a.status === 'late').length;
   const daysLate = monthlyLogs.filter((a: any) => a.status === 'late').length;
   const daysAbsent = monthlyLogs.filter((a: any) => a.status === 'absent').length;
@@ -173,7 +176,7 @@ const EmployeeDashboardPage: React.FC = () => {
             <Calendar size={20} />
           </div>
           <div>
-            <p className="text-xl font-bold text-slate-900">{leavesData.length}</p>
+            <p className="text-xl font-bold text-slate-900">{leaves.length}</p>
             <p className="text-xs text-slate-500 font-semibold">Leave Applications</p>
           </div>
         </div>
@@ -261,13 +264,13 @@ const EmployeeDashboardPage: React.FC = () => {
               </button>
             </div>
 
-            {leavesData.length === 0 ? (
+            {leaves.length === 0 ? (
               <div className="py-6 text-center text-slate-400 text-sm">
                 No leave requests filed yet
               </div>
             ) : (
               <div className="space-y-3">
-                {leavesData.map((leave: any) => (
+                {leaves.map((leave: any) => (
                   <div
                     key={leave.id}
                     className="p-3 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-between text-sm"
