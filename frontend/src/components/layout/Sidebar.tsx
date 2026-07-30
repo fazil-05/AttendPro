@@ -49,19 +49,19 @@ export const Sidebar: React.FC = () => {
   const SidebarContent = () => (
     <div className="sidebar" style={{ width: collapsed ? 'var(--sidebar-collapsed)' : 'var(--sidebar-width)' }}>
       {/* Logo */}
-      <div className="flex items-center gap-3 px-4 py-5 border-b border-slate-700/50">
-        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center flex-shrink-0 shadow-lg shadow-blue-500/30">
+      <div className="flex items-center gap-3 px-4 py-5 border-b border-slate-100">
+        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-600 to-blue-800 flex items-center justify-center flex-shrink-0 shadow-md shadow-blue-500/20">
           <Clock size={18} className="text-white" />
         </div>
         {!collapsed && (
           <div className="overflow-hidden">
-            <p className="text-white font-bold text-sm leading-tight">AttendPro</p>
-            <p className="text-slate-400 text-xs">Enterprise HRMS</p>
+            <p className="text-slate-900 font-extrabold text-sm leading-tight tracking-tight">AttendPro</p>
+            <p className="text-blue-600 text-xs font-semibold">Enterprise HRMS</p>
           </div>
         )}
         <button
           onClick={() => setCollapsed(c => !c)}
-          className="ml-auto p-1.5 rounded-lg hover:bg-slate-700/50 text-slate-400 hover:text-white transition-colors hidden md:flex"
+          className="ml-auto p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition-colors hidden md:flex"
         >
           {collapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
         </button>
@@ -86,26 +86,26 @@ export const Sidebar: React.FC = () => {
       </nav>
 
       {/* Footer */}
-      <div className="p-4 border-t border-slate-700/50 space-y-2">
+      <div className="p-4 border-t border-slate-100 space-y-2">
         {/* Theme toggle */}
         <button
           onClick={toggleTheme}
           className="sidebar-nav-item w-full"
           title={collapsed ? (theme === 'light' ? 'Dark Mode' : 'Light Mode') : undefined}
         >
-          {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
-          {!collapsed && <span>{theme === 'light' ? 'Dark Mode' : 'Light Mode'}</span>}
+          {theme === 'light' ? <Moon size={18} className="text-slate-500" /> : <Sun size={18} className="text-amber-500" />}
+          {!collapsed && <span className="text-xs font-medium text-slate-600">{theme === 'light' ? 'Dark Mode' : 'Light Mode'}</span>}
         </button>
 
         {/* User info */}
-        <div className="flex items-center gap-3 p-2">
-          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center flex-shrink-0 text-white text-xs font-bold">
+        <div className="flex items-center gap-3 p-2 bg-slate-50 rounded-xl border border-slate-100">
+          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center flex-shrink-0 text-white text-xs font-bold shadow-xs">
             {user?.name?.charAt(0).toUpperCase()}
           </div>
           {!collapsed && (
             <div className="flex-1 min-w-0">
-              <p className="text-white text-sm font-medium truncate">{user?.name}</p>
-              <p className="text-slate-400 text-xs truncate capitalize">{user?.role?.replace('_', ' ')}</p>
+              <p className="text-slate-900 text-xs font-bold truncate">{user?.name}</p>
+              <p className="text-blue-600 text-[11px] font-semibold truncate capitalize">{user?.role?.replace(/_/g, ' ')}</p>
             </div>
           )}
         </div>
@@ -113,11 +113,11 @@ export const Sidebar: React.FC = () => {
         {/* Logout */}
         <button
           onClick={logout}
-          className="sidebar-nav-item w-full text-red-400 hover:text-red-300 hover:bg-red-900/20"
+          className="sidebar-nav-item w-full text-red-600 hover:text-red-700 hover:bg-red-50"
           title={collapsed ? 'Logout' : undefined}
         >
-          <LogOut size={20} />
-          {!collapsed && <span>Logout</span>}
+          <LogOut size={18} />
+          {!collapsed && <span className="text-xs font-semibold">Logout</span>}
         </button>
       </div>
     </div>
