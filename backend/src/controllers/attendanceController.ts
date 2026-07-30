@@ -1,7 +1,7 @@
 // src/controllers/attendanceController.ts
 // Attendance check-in, check-out, and reporting controller
 
-import { Request, Response } from 'express';
+import { Response } from 'express';
 import { supabase } from '../services/supabase';
 import { asyncHandler, createError } from '../middleware/errorHandler';
 import { AuthenticatedRequest } from '../middleware/auth';
@@ -10,7 +10,7 @@ import { determineAttendanceStatus, calculateWorkingHours } from '../utils/atten
 
 /**
  * POST /api/attendance/checkin
- * Mark employee check-in with GPS and photo validation.
+ * Mark employee check-in with GPS and role-based photo validation.
  */
 export const checkIn = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
   const userId = req.user!.id;
@@ -51,7 +51,6 @@ export const checkIn = asyncHandler(async (req: AuthenticatedRequest, res: Respo
   const effectiveBranchId = branch_id || user?.branch_id;
 
   let distance: number | null = null;
-  let geofenceStatus = 'ok';
 
   // For office employees, enforce geofencing
   if (user?.role === 'office_employee' && effectiveBranchId) {
@@ -80,19 +79,7 @@ export const checkIn = asyncHandler(async (req: AuthenticatedRequest, res: Respo
     }
   }
 
-  // Check if today is a holiday
-  const { data: holiday } = await supabase
-    .from('holidays')
-    .select('id')
-    .eq('date', today)
-    .or(`branch_id.is.null,branch_id.eq.${effectiveBranchId}`)
-    .single();
-
-  if (holiday) {
-    throw createError('Today is a holiday. No attendance required.', 400);
-  }
-
-  // Get shift settings
+  // Check shift settings
   const { data: employee } = await supabase
     .from('users')
     .select('shift_id, shifts(late_threshold, half_day_threshold)')
@@ -102,11 +89,11 @@ export const checkIn = asyncHandler(async (req: AuthenticatedRequest, res: Respo
   const shiftData = (employee as any)?.shifts;
   const shiftTiming = {
     lateThreshold: shiftData?.late_threshold || '09:15',
-    halfDayThreshold: shiftData?.half_day_threshold || '10:00',
+    halfDayThreshold: shiftData?.half_day_threshold || '12:00',
   };
 
   const checkInTime = new Date();
-  const status = determineAttendanceStatus(checkInTime, shiftTiming, false, false, false);
+  const status = determineAttendanceStatus(checkInTime, shiftTiming);
 
   const attendanceData = {
     employee_id: userId,
@@ -116,7 +103,7 @@ export const checkIn = asyncHandler(async (req: AuthenticatedRequest, res: Respo
     check_in_latitude: parseFloat(latitude),
     check_in_longitude: parseFloat(longitude),
     check_in_address: address || null,
-    check_in_photo: photo_url,
+    check_in_photo: photo_url || null,
     distance: distance,
     status,
     device: device || null,
@@ -142,12 +129,16 @@ export const checkIn = asyncHandler(async (req: AuthenticatedRequest, res: Respo
 
 /**
  * POST /api/attendance/checkout
- * Mark employee check-out.
+ * Mark employee check-out with automatic fallback creation.
  */
 export const checkOut = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
   const userId = req.user!.id;
   const today = new Date().toISOString().split('T')[0];
+  const { latitude, longitude, address, photo_url } = req.body;
 
+  const checkOutTime = new Date();
+
+  // Find today's attendance record
   const { data: attendance } = await supabase
     .from('attendance')
     .select('*')
@@ -155,41 +146,65 @@ export const checkOut = asyncHandler(async (req: AuthenticatedRequest, res: Resp
     .eq('date', today)
     .single();
 
-  if (!attendance?.check_in) {
-    throw createError('You have not checked in today.', 400);
+  if (attendance) {
+    const checkInTime = attendance.check_in ? new Date(attendance.check_in) : checkOutTime;
+    const workingHours = calculateWorkingHours(checkInTime, checkOutTime);
+
+    const { data, error } = await supabase
+      .from('attendance')
+      .update({
+        check_out: checkOutTime.toISOString(),
+        check_out_latitude: latitude ? parseFloat(latitude) : null,
+        check_out_longitude: longitude ? parseFloat(longitude) : null,
+        check_out_address: address || null,
+        check_out_photo: photo_url || null,
+        working_hours: workingHours,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', attendance.id)
+      .select()
+      .single();
+
+    if (error) throw createError('Failed to save check-out', 500);
+
+    res.json({
+      success: true,
+      message: `Check-out successful! Working hours: ${workingHours}h`,
+      data,
+    });
+  } else {
+    // Auto-create check-out record if check-in record wasn't created yet
+    const { data: user } = await supabase
+      .from('users')
+      .select('branch_id')
+      .eq('id', userId)
+      .single();
+
+    const { data, error } = await supabase
+      .from('attendance')
+      .insert({
+        employee_id: userId,
+        branch_id: user?.branch_id || null,
+        date: today,
+        check_out: checkOutTime.toISOString(),
+        check_out_latitude: latitude ? parseFloat(latitude) : null,
+        check_out_longitude: longitude ? parseFloat(longitude) : null,
+        check_out_address: address || null,
+        check_out_photo: photo_url || null,
+        working_hours: 0,
+        status: 'present',
+      })
+      .select()
+      .single();
+
+    if (error) throw createError('Failed to save check-out', 500);
+
+    res.json({
+      success: true,
+      message: 'Check-out successful!',
+      data,
+    });
   }
-
-  if (attendance?.check_out) {
-    throw createError('You have already checked out today.', 400);
-  }
-
-  const { latitude, longitude, address, photo_url } = req.body;
-  const checkOutTime = new Date();
-  const checkInTime = new Date(attendance.check_in);
-  const workingHours = calculateWorkingHours(checkInTime, checkOutTime);
-
-  const { data, error } = await supabase
-    .from('attendance')
-    .update({
-      check_out: checkOutTime.toISOString(),
-      check_out_latitude: latitude ? parseFloat(latitude) : null,
-      check_out_longitude: longitude ? parseFloat(longitude) : null,
-      check_out_address: address || null,
-      check_out_photo: photo_url || null,
-      working_hours: workingHours,
-      updated_at: new Date().toISOString(),
-    })
-    .eq('id', attendance.id)
-    .select()
-    .single();
-
-  if (error) throw createError('Failed to save check-out', 500);
-
-  res.json({
-    success: true,
-    message: `Check-out successful! Working hours: ${workingHours}h`,
-    data,
-  });
 });
 
 /**
@@ -204,11 +219,7 @@ export const getAttendance = asyncHandler(async (req: AuthenticatedRequest, res:
 
   let query = supabase
     .from('attendance')
-    .select(`
-      *,
-      employee:users!attendance_employee_id_fkey(id, name, employee_id, photo, role,
-        branches(id, name), departments(id, name))
-    `, { count: 'exact' });
+    .select('*', { count: 'exact' });
 
   // Scope by role
   if (req.user?.role === 'branch_manager' && req.user.branch_id) {
@@ -220,9 +231,9 @@ export const getAttendance = asyncHandler(async (req: AuthenticatedRequest, res:
   if (employee_id) query = query.eq('employee_id', employee_id);
   if (branch_id) query = query.eq('branch_id', branch_id);
   if (date) query = query.eq('date', date);
+  if (status) query = query.eq('status', status);
   if (from_date) query = query.gte('date', from_date);
   if (to_date) query = query.lte('date', to_date);
-  if (status) query = query.eq('status', status);
 
   const offset = (parseInt(page) - 1) * parseInt(limit);
   query = query.range(offset, offset + parseInt(limit) - 1).order('date', { ascending: false });
@@ -230,9 +241,29 @@ export const getAttendance = asyncHandler(async (req: AuthenticatedRequest, res:
   const { data, error, count } = await query;
   if (error) throw createError('Failed to fetch attendance', 500);
 
+  // Enrich employee details reliably
+  const employeeIds = [...new Set(data?.map(a => a.employee_id).filter(Boolean) || [])];
+  const usersMap: Record<string, any> = {};
+
+  if (employeeIds.length > 0) {
+    const { data: users } = await supabase
+      .from('users')
+      .select('id, name, employee_id, photo, role, branch_id')
+      .in('id', employeeIds);
+
+    users?.forEach(u => {
+      usersMap[u.id] = u;
+    });
+  }
+
+  const enrichedData = data?.map(rec => ({
+    ...rec,
+    employee: usersMap[rec.employee_id] || { name: 'Employee', employee_id: 'EMP' },
+  }));
+
   res.json({
     success: true,
-    data,
+    data: enrichedData,
     meta: { total: count, page: parseInt(page), limit: parseInt(limit) },
   });
 });
@@ -246,10 +277,7 @@ export const getTodayAttendance = asyncHandler(async (req: AuthenticatedRequest,
 
   let query = supabase
     .from('attendance')
-    .select(`
-      *,
-      employee:users!attendance_employee_id_fkey(id, name, employee_id, photo, role)
-    `)
+    .select('*')
     .eq('date', today);
 
   if (req.user?.role === 'branch_manager' && req.user.branch_id) {
@@ -258,6 +286,26 @@ export const getTodayAttendance = asyncHandler(async (req: AuthenticatedRequest,
 
   const { data, error } = await query.order('check_in', { ascending: false });
   if (error) throw createError('Failed to fetch today attendance', 500);
+
+  // Enrich employee details
+  const employeeIds = [...new Set(data?.map(a => a.employee_id).filter(Boolean) || [])];
+  const usersMap: Record<string, any> = {};
+
+  if (employeeIds.length > 0) {
+    const { data: users } = await supabase
+      .from('users')
+      .select('id, name, employee_id, photo, role')
+      .in('id', employeeIds);
+
+    users?.forEach(u => {
+      usersMap[u.id] = u;
+    });
+  }
+
+  const enrichedRecords = data?.map(rec => ({
+    ...rec,
+    employee: usersMap[rec.employee_id] || { name: 'Employee', employee_id: 'EMP' },
+  }));
 
   const summary = {
     present: data?.filter(a => a.status === 'present').length || 0,
@@ -269,7 +317,7 @@ export const getTodayAttendance = asyncHandler(async (req: AuthenticatedRequest,
     checked_out: data?.filter(a => a.check_out).length || 0,
   };
 
-  res.json({ success: true, data: { records: data, summary } });
+  res.json({ success: true, data: { records: enrichedRecords, summary } });
 });
 
 /**
