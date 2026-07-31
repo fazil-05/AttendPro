@@ -22,6 +22,7 @@ const EmployeeLeavesPage = lazy(() => import('./pages/employee/EmployeeLeavesPag
 const HolidaysPage = lazy(() => import('./pages/admin/HolidaysPage'));
 const ReportsPage = lazy(() => import('./pages/admin/ReportsPage'));
 const MarkAttendancePage = lazy(() => import('./pages/attendance/MarkAttendancePage'));
+const FieldAssignmentsPage = lazy(() => import('./pages/admin/FieldAssignmentsPage'));
 
 // ─── Query Client ────────────────────────────────────────────
 const queryClient = new QueryClient({
@@ -168,12 +169,11 @@ function AppRoutes() {
           </ProtectedRoute>
         } />
 
-        {/* Field assignments placeholder */}
+        {/* Field visit assignments */}
         <Route path="/field-assignments" element={
-          <div className="glass-card p-8 text-center text-slate-500">
-            <p className="text-lg font-medium">Field Visit Assignments</p>
-            <p className="text-sm mt-1">Module ready — connect to /api/field-assignments</p>
-          </div>
+          <ProtectedRoute allowedRoles={['super_admin', 'branch_manager', 'field_employee']}>
+            <Suspense fallback={<PageLoader />}><FieldAssignmentsPage /></Suspense>
+          </ProtectedRoute>
         } />
         <Route path="/live-tracking" element={
           <div className="glass-card p-8 text-center text-slate-500">
