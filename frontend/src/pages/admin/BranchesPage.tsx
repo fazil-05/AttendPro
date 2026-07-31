@@ -294,56 +294,60 @@ const BranchesPage: React.FC = () => {
       </div>
 
       {/* Branch Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
         {isLoading ? (
           Array.from({ length: 6 }).map((_, i) => <CardSkeleton key={i} />)
         ) : branches.map((branch, index) => (
           <motion.div
             key={branch.id}
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.05 }}
-            className="group relative bg-white rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-xl hover:border-blue-400/40 hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between overflow-hidden"
+            transition={{ delay: index * 0.04 }}
+            className="group relative bg-white rounded-xl border border-slate-200/80 shadow-2xs hover:shadow-md hover:border-blue-400/40 transition-all duration-200 flex flex-col justify-between overflow-hidden"
           >
             {/* Top Royal Blue Accent Line */}
-            <div className="h-1.5 w-full bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-500 opacity-90 group-hover:opacity-100 transition-opacity" />
+            <div className="h-1 w-full bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-500 opacity-90 group-hover:opacity-100 transition-opacity" />
 
-            <div className="p-5 sm:p-6 space-y-4">
+            <div className="p-4 space-y-2.5">
               {/* Header: Icon, Title, Code & Status */}
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex items-center gap-3.5">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-700 text-white flex items-center justify-center shadow-md shadow-blue-500/20 group-hover:scale-105 transition-transform flex-shrink-0">
-                    <Building2 size={22} />
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-600 text-white flex items-center justify-center shadow-xs flex-shrink-0">
+                    <Building2 size={18} />
                   </div>
-                  <div>
-                    <h3 className="font-extrabold text-slate-900 text-base sm:text-lg group-hover:text-blue-600 transition-colors leading-tight">
-                      {branch.name}
-                    </h3>
-                    <span className="inline-block mt-1 font-mono text-[11px] font-bold bg-slate-100 text-slate-600 border border-slate-200/80 px-2 py-0.5 rounded-md">
-                      {branch.code}
-                    </span>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <h3 className="font-bold text-slate-900 text-sm sm:text-base group-hover:text-blue-600 transition-colors truncate leading-tight">
+                        {branch.name}
+                      </h3>
+                      <span className="font-mono text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200 px-1.5 py-0.5 rounded flex-shrink-0">
+                        {branch.code}
+                      </span>
+                    </div>
                   </div>
                 </div>
-                <StatusBadge status={branch.status} size="sm" />
+                <div className="flex-shrink-0">
+                  <StatusBadge status={branch.status} size="sm" />
+                </div>
               </div>
 
               {/* Office Address */}
               {branch.address && (
-                <div className="flex items-start gap-2.5 p-3 rounded-xl bg-slate-50/80 border border-slate-100 text-xs text-slate-600 font-medium">
-                  <MapPin size={15} className="mt-0.5 flex-shrink-0 text-blue-600" />
-                  <span className="line-clamp-2 leading-relaxed">{branch.address}</span>
+                <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-slate-50 border border-slate-100 text-xs text-slate-600 font-medium">
+                  <MapPin size={13} className="flex-shrink-0 text-blue-600" />
+                  <span className="truncate">{branch.address}</span>
                 </div>
               )}
 
               {/* Geofence & Employee Count Metrics */}
-              <div className="flex flex-wrap items-center gap-2 pt-1">
-                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-50/80 text-blue-700 border border-blue-100 text-xs font-semibold shadow-2xs">
-                  <Navigation size={13} className="text-blue-600" />
+              <div className="flex items-center gap-2 pt-0.5">
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-50/80 text-blue-700 border border-blue-100 text-[11px] font-semibold">
+                  <Navigation size={12} className="text-blue-600" />
                   Geofence: <strong className="font-bold">{branch.radius}m</strong>
                 </span>
                 {branch.employee_count !== undefined && (
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100/80 text-slate-700 border border-slate-200/80 text-xs font-semibold">
-                    <Users size={13} className="text-slate-500" />
+                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100/80 text-slate-700 border border-slate-200/80 text-[11px] font-semibold">
+                    <Users size={12} className="text-slate-500" />
                     <strong className="font-bold">{branch.employee_count}</strong> employees
                   </span>
                 )}
@@ -351,31 +355,31 @@ const BranchesPage: React.FC = () => {
             </div>
 
             {/* Card Footer Actions */}
-            <div className="px-5 py-3.5 sm:px-6 bg-slate-50/50 border-t border-slate-100 flex items-center justify-between gap-3">
+            <div className="px-4 py-2.5 bg-slate-50/60 border-t border-slate-100 flex items-center justify-between gap-2">
               <button
                 onClick={() => { setEditBranch(branch); setShowForm(true); }}
-                className="btn btn-sm btn-secondary flex-1 text-xs font-bold gap-1.5 shadow-2xs hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all"
+                className="btn btn-sm py-1.5 px-3 btn-secondary flex-1 text-xs font-semibold gap-1.5 hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all"
               >
-                <Edit size={14} /> Edit Branch
+                <Edit size={13} /> Edit Branch
               </button>
 
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-1">
                 <button
                   onClick={() => toggleStatus.mutate({ id: branch.id, status: branch.status === 'active' ? 'inactive' : 'active' })}
-                  className="p-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-100 text-slate-600 transition-colors shadow-2xs"
+                  className="p-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 text-slate-600 transition-colors"
                   title={branch.status === 'active' ? 'Disable Branch' : 'Enable Branch'}
                 >
                   {branch.status === 'active'
-                    ? <ToggleRight size={20} className="text-emerald-600" />
-                    : <ToggleLeft size={20} className="text-slate-400" />
+                    ? <ToggleRight size={18} className="text-emerald-600" />
+                    : <ToggleLeft size={18} className="text-slate-400" />
                   }
                 </button>
                 <button
                   onClick={() => setDeleteTarget(branch)}
-                  className="p-2 rounded-xl border border-slate-200 bg-white hover:bg-red-50 hover:border-red-200 text-slate-400 hover:text-red-600 transition-colors shadow-2xs"
+                  className="p-1.5 rounded-lg border border-slate-200 bg-white hover:bg-red-50 hover:border-red-200 text-slate-400 hover:text-red-600 transition-colors"
                   title="Delete Branch"
                 >
-                  <Trash2 size={16} />
+                  <Trash2 size={15} />
                 </button>
               </div>
             </div>
