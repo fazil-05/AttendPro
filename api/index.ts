@@ -7,6 +7,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import path from 'path';
+import dotenv from 'dotenv';
 dotenv.config({ path: path.resolve(__dirname, '../backend/.env') });
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
 dotenv.config();
