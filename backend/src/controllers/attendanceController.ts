@@ -129,14 +129,12 @@ export const checkIn = asyncHandler(async (req: AuthenticatedRequest, res: Respo
 
 /**
  * POST /api/attendance/checkout
- * Mark employee check-out with automatic fallback creation.
+ * Mark employee check-out. Enforces: must have checked in, cannot check out twice.
  */
 export const checkOut = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
   const userId = req.user!.id;
   const today = new Date().toISOString().split('T')[0];
   const { latitude, longitude, address, photo_url } = req.body;
-
-  const checkOutTime = new Date();
 
   // Find today's attendance record
   const { data: attendance } = await supabase
@@ -146,66 +144,50 @@ export const checkOut = asyncHandler(async (req: AuthenticatedRequest, res: Resp
     .eq('date', today)
     .single();
 
-  if (attendance) {
-    const checkInTime = attendance.check_in ? new Date(attendance.check_in) : checkOutTime;
-    const workingHours = calculateWorkingHours(checkInTime, checkOutTime);
-
-    const { data, error } = await supabase
-      .from('attendance')
-      .update({
-        check_out: checkOutTime.toISOString(),
-        check_out_latitude: latitude ? parseFloat(latitude) : null,
-        check_out_longitude: longitude ? parseFloat(longitude) : null,
-        check_out_address: address || null,
-        check_out_photo: photo_url || null,
-        working_hours: workingHours,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', attendance.id)
-      .select()
-      .single();
-
-    if (error) throw createError('Failed to save check-out', 500);
-
-    res.json({
-      success: true,
-      message: `Check-out successful! Working hours: ${workingHours}h`,
-      data,
-    });
-  } else {
-    // Auto-create check-out record if check-in record wasn't created yet
-    const { data: user } = await supabase
-      .from('users')
-      .select('branch_id')
-      .eq('id', userId)
-      .single();
-
-    const { data, error } = await supabase
-      .from('attendance')
-      .insert({
-        employee_id: userId,
-        branch_id: user?.branch_id || null,
-        date: today,
-        check_out: checkOutTime.toISOString(),
-        check_out_latitude: latitude ? parseFloat(latitude) : null,
-        check_out_longitude: longitude ? parseFloat(longitude) : null,
-        check_out_address: address || null,
-        check_out_photo: photo_url || null,
-        working_hours: 0,
-        status: 'present',
-      })
-      .select()
-      .single();
-
-    if (error) throw createError('Failed to save check-out', 500);
-
-    res.json({
-      success: true,
-      message: 'Check-out successful!',
-      data,
-    });
+  // Must have checked in first
+  if (!attendance || !attendance.check_in) {
+    throw createError('You have not checked in today. Please check in first.', 400);
   }
+
+  // Prevent duplicate check-out
+  if (attendance.check_out) {
+    throw createError('You have already checked out today.', 400);
+  }
+
+  const checkOutTime = new Date();
+  const checkInTime = new Date(attendance.check_in);
+  const workingHours = calculateWorkingHours(checkInTime, checkOutTime);
+
+  const { data, error } = await supabase
+    .from('attendance')
+    .update({
+      check_out: checkOutTime.toISOString(),
+      check_out_latitude: latitude ? parseFloat(latitude) : null,
+      check_out_longitude: longitude ? parseFloat(longitude) : null,
+      check_out_address: address || null,
+      check_out_photo: photo_url || null,
+      working_hours: workingHours,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', attendance.id)
+    .select()
+    .single();
+
+  if (error) throw createError('Failed to save check-out', 500);
+
+  // Format for message: Xh Xm
+  const totalMins = Math.round(workingHours * 60);
+  const hrs = Math.floor(totalMins / 60);
+  const mins = totalMins % 60;
+  const formattedHours = hrs > 0 ? `${hrs}h ${mins}m` : `${mins}m`;
+
+  res.json({
+    success: true,
+    message: `Check-out successful! Working hours: ${formattedHours}`,
+    data,
+  });
 });
+
 
 /**
  * GET /api/attendance
@@ -256,9 +238,25 @@ export const getAttendance = asyncHandler(async (req: AuthenticatedRequest, res:
     });
   }
 
+  // Enrich branch names
+  const branchIds = [...new Set(data?.map(a => a.branch_id).filter(Boolean) || [])];
+  const branchesMap: Record<string, string> = {};
+
+  if (branchIds.length > 0) {
+    const { data: branches } = await supabase
+      .from('branches')
+      .select('id, name')
+      .in('id', branchIds);
+
+    branches?.forEach(b => {
+      branchesMap[b.id] = b.name;
+    });
+  }
+
   const enrichedData = data?.map(rec => ({
     ...rec,
     employee: usersMap[rec.employee_id] || { name: 'Employee', employee_id: 'EMP' },
+    branch_name: branchesMap[rec.branch_id] || null,
   }));
 
   res.json({
