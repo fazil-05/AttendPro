@@ -1,13 +1,11 @@
-// src/pages/employee/EmployeeDashboardPage.tsx
-// Dedicated dashboard portal for Office and Field Employees — Clean Light Theme
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
+import toast from 'react-hot-toast';
 import {
   Clock, Calendar, CheckCircle, Navigation,
-  AlertCircle, ChevronRight, Shield, FileText
+  AlertCircle, ChevronRight, Shield, FileText, MapPin, Check, X, Loader2
 } from 'lucide-react';
 import { format } from 'date-fns';
 import api from '../../services/api';
@@ -18,6 +16,7 @@ import { TableSkeleton } from '../../components/ui/SkeletonLoader';
 const EmployeeDashboardPage: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const today = format(new Date(), 'yyyy-MM-dd');
 
   // Fetch today's attendance
@@ -47,9 +46,60 @@ const EmployeeDashboardPage: React.FC = () => {
     },
   });
 
+  // Fetch my assigned field visits
+  const { data: fieldAssignmentsData, refetch: refetchAssignments } = useQuery({
+    queryKey: ['my-field-assignments'],
+    queryFn: async () => {
+      const { data } = await api.get('/field-assignments');
+      return data.data || [];
+    },
+  });
+
+  const updateAssignmentStatus = useMutation({
+    mutationFn: ({ id, status, latitude, longitude }: { id: string; status: string; latitude?: number; longitude?: number }) =>
+      api.patch(`/field-assignments/${id}/status`, { status, latitude, longitude }),
+    onSuccess: () => {
+      toast.success('Field visit status updated');
+      queryClient.invalidateQueries({ queryKey: ['my-field-assignments'] });
+    },
+    onError: (err: any) => {
+      toast.error(err?.response?.data?.message || 'Failed to update field assignment');
+    },
+  });
+
+  const handleStartVisit = (assignment: any) => {
+    if (!navigator.geolocation) {
+      toast.error('Geolocation is not supported by your browser');
+      return;
+    }
+    toast.loading('Checking GPS location for geofence...', { id: 'gps-check' });
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        toast.dismiss('gps-check');
+        updateAssignmentStatus.mutate({
+          id: assignment.id,
+          status: 'in_progress',
+          latitude: pos.coords.latitude,
+          longitude: pos.coords.longitude,
+        });
+      },
+      (err) => {
+        toast.dismiss('gps-check');
+        toast.error(`GPS Location Error: ${err.message}. Please allow location access.`);
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  };
+
   // Safe fallback arrays
   const monthlyLogs = historyData || [];
   const leaves = leavesData || [];
+  const fieldAssignments = fieldAssignmentsData || [];
+
+  // Active or pending field assignments
+  const pendingOrActiveVisits = fieldAssignments.filter(
+    (a: any) => a.status === 'pending' || a.status === 'accepted' || a.status === 'in_progress'
+  );
 
   // Calculate monthly stats from history
   const daysPresent = monthlyLogs.filter((a: any) => a.status === 'present' || a.status === 'late').length;
@@ -93,6 +143,109 @@ const EmployeeDashboardPage: React.FC = () => {
           </button>
         </div>
       </motion.div>
+
+      {/* Field Visit Notifications Widget (Shows when employee has assigned visits) */}
+      {fieldAssignments.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="glass-card p-5 bg-white border border-blue-200/80 shadow-sm rounded-2xl relative overflow-hidden"
+        >
+          <div className="h-1 w-full bg-gradient-to-r from-blue-600 to-indigo-600 absolute top-0 left-0" />
+          <div className="flex items-center justify-between mb-3 border-b border-slate-100 pb-2.5">
+            <div className="flex items-center gap-2">
+              <div className="p-2 rounded-lg bg-blue-50 text-blue-600 border border-blue-100">
+                <MapPin size={18} />
+              </div>
+              <div>
+                <h3 className="font-extrabold text-slate-900 text-base flex items-center gap-2">
+                  Assigned Field Visits
+                  {pendingOrActiveVisits.length > 0 && (
+                    <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-blue-600 text-white">
+                      {pendingOrActiveVisits.length} Active
+                    </span>
+                  )}
+                </h3>
+                <p className="text-xs text-slate-500 font-medium">Customer visit tasks assigned to you by manager</p>
+              </div>
+            </div>
+            <button
+              onClick={() => navigate('/field-assignments')}
+              className="text-xs font-bold text-blue-600 hover:underline flex items-center gap-1"
+            >
+              All Visits <ChevronRight size={14} />
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 mt-2">
+            {fieldAssignments.slice(0, 4).map((visit: any) => (
+              <div
+                key={visit.id}
+                className="p-3.5 rounded-xl border border-slate-200 bg-slate-50/70 hover:bg-white hover:shadow-xs transition-all space-y-2"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <h4 className="font-extrabold text-slate-900 text-sm">{visit.customer_name}</h4>
+                    <p className="text-xs text-slate-500 flex items-center gap-1 mt-0.5">
+                      <Calendar size={11} /> {visit.visit_date}
+                    </p>
+                  </div>
+                  <StatusBadge status={visit.status} size="sm" />
+                </div>
+
+                {visit.customer_address && (
+                  <div className="flex items-center gap-1.5 text-xs text-slate-600 font-medium bg-white p-2 rounded-lg border border-slate-100">
+                    <MapPin size={13} className="text-blue-600 flex-shrink-0" />
+                    <span className="truncate">{visit.customer_address}</span>
+                  </div>
+                )}
+
+                <div className="flex items-center justify-between pt-1">
+                  <span className="text-[11px] font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-100">
+                    🎯 Radius: {visit.radius || 100}m
+                  </span>
+
+                  {/* Actions for employee */}
+                  {visit.status === 'pending' && (
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        onClick={() => updateAssignmentStatus.mutate({ id: visit.id, status: 'accepted' })}
+                        className="btn btn-xs py-1 px-2.5 bg-emerald-600 text-white font-bold text-xs hover:bg-emerald-700"
+                      >
+                        Accept
+                      </button>
+                      <button
+                        onClick={() => updateAssignmentStatus.mutate({ id: visit.id, status: 'rejected' })}
+                        className="btn btn-xs py-1 px-2 bg-slate-200 text-slate-700 font-bold text-xs hover:bg-slate-300"
+                      >
+                        Reject
+                      </button>
+                    </div>
+                  )}
+
+                  {visit.status === 'accepted' && (
+                    <button
+                      onClick={() => handleStartVisit(visit)}
+                      className="btn btn-xs py-1 px-3 bg-blue-600 text-white font-bold text-xs hover:bg-blue-700 flex items-center gap-1"
+                    >
+                      <Navigation size={12} /> Start Visit (GPS)
+                    </button>
+                  )}
+
+                  {visit.status === 'in_progress' && (
+                    <button
+                      onClick={() => updateAssignmentStatus.mutate({ id: visit.id, status: 'completed' })}
+                      className="btn btn-xs py-1 px-3 bg-emerald-600 text-white font-bold text-xs hover:bg-emerald-700 flex items-center gap-1"
+                    >
+                      <Check size={12} /> Complete Visit
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+      )}
 
       {/* Today Status Widget */}
       <motion.div
