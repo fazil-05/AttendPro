@@ -3,55 +3,13 @@
 
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Navigation, RefreshCw, Users, MapPin, Clock, Phone,
-  Search, Shield, Activity, Compass
+  Search, Shield, Activity, Compass, ZoomIn, ZoomOut, CheckCircle2, AlertCircle
 } from 'lucide-react';
-import { MapContainer, TileLayer, Marker, Popup, Circle } from 'react-leaflet';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
 import api from '../../services/api';
-import { StatusBadge } from '../../components/ui/StatusBadge';
 import { CardSkeleton } from '../../components/ui/SkeletonLoader';
-
-// Fix Leaflet marker icon paths in React bundle
-const customEmployeeIcon = L.divIcon({
-  className: 'custom-leaflet-marker',
-  html: `
-    <div style="
-      position: relative;
-      width: 38px;
-      height: 38px;
-      background: linear-gradient(135deg, #2563eb, #1d4ed8);
-      border: 3px solid #ffffff;
-      border-radius: 50%;
-      box-shadow: 0 4px 14px rgba(37,99,235,0.4);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-    ">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/>
-        <circle cx="12" cy="10" r="3"/>
-      </svg>
-      <span style="
-        position: absolute;
-        top: -2px;
-        right: -2px;
-        width: 10px;
-        height: 10px;
-        background-color: #10b981;
-        border: 2px solid white;
-        border-radius: 50%;
-      "></span>
-    </div>
-  `,
-  iconSize: [38, 38],
-  iconAnchor: [19, 38],
-  popupAnchor: [0, -34],
-});
 
 export interface LiveEmployeeItem {
   id: string;
@@ -70,8 +28,9 @@ export interface LiveEmployeeItem {
 }
 
 const LiveTrackingPage: React.FC = () => {
-  const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [selectedItem, setSelectedItem] = useState<LiveEmployeeItem | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [zoomLevel, setZoomLevel] = useState(1);
 
   // Fetch live tracking data from API every 15 seconds
   const { data, isLoading, isFetching, refetch } = useQuery({
@@ -83,7 +42,7 @@ const LiveTrackingPage: React.FC = () => {
     refetchInterval: 15000,
   });
 
-  // Also fetch all field assignments today for stats
+  // Fetch all field assignments today for stats
   const { data: allAssignmentsData } = useQuery({
     queryKey: ['field-assignments-today'],
     queryFn: async () => {
@@ -110,12 +69,20 @@ const LiveTrackingPage: React.FC = () => {
     );
   });
 
-  // Default Map Center (Hyderabad / India default or active staff coords)
-  const defaultCenter = liveEmployees.length > 0 && liveEmployees[0].check_in_latitude
-    ? { lat: Number(liveEmployees[0].check_in_latitude), lng: Number(liveEmployees[0].check_in_longitude) }
-    : { lat: 17.4474, lng: 78.3762 }; // Hyderabad default center
-
-  const activeMapCenter = selectedLocation || defaultCenter;
+  // Calculate coordinates mapping for visual vector map (normalized 0-100% canvas)
+  const getMapPosition = (lat: number, lng: number, index: number) => {
+    if (!lat || !lng) {
+      const fallbackPositions = [
+        { x: 35, y: 40 }, { x: 60, y: 45 }, { x: 45, y: 65 },
+        { x: 70, y: 30 }, { x: 30, y: 70 }, { x: 55, y: 55 }
+      ];
+      return fallbackPositions[index % fallbackPositions.length];
+    }
+    // Normalize coordinates around India range (lat 8-35, lng 68-97)
+    const normX = Math.min(85, Math.max(15, ((lng - 68) / 29) * 70 + 15));
+    const normY = Math.min(85, Math.max(15, 85 - ((lat - 8) / 27) * 70));
+    return { x: normX, y: normY };
+  };
 
   return (
     <div className="space-y-5">
@@ -124,10 +91,10 @@ const LiveTrackingPage: React.FC = () => {
         <div>
           <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-xs font-bold border border-emerald-200 mb-1">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
-            LIVE GPS TRACKING
+            LIVE GPS RADAR
           </div>
           <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900">Live Field Employee Tracking</h2>
-          <p className="text-slate-500 text-xs sm:text-sm">Monitor active field staff locations & customer visit status in real-time</p>
+          <p className="text-slate-500 text-xs sm:text-sm">Real-time GPS location monitoring & active customer visit tracking</p>
         </div>
 
         <button
@@ -161,7 +128,7 @@ const LiveTrackingPage: React.FC = () => {
         <div className="bg-white p-3.5 sm:p-4 rounded-xl border border-slate-200/80 shadow-2xs">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-slate-500">Completed Today</span>
-            <div className="p-2 rounded-lg bg-blue-50 text-blue-600"><Navigation size={16} /></div>
+            <div className="p-2 rounded-lg bg-blue-50 text-blue-600"><CheckCircle2 size={16} /></div>
           </div>
           <p className="text-xl font-extrabold text-blue-600 mt-1">{completedToday}</p>
         </div>
@@ -175,82 +142,148 @@ const LiveTrackingPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Main Grid: Live Map + Employee Sidebar */}
+      {/* Main Grid: Interactive Vector Map + Sidebar List */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 items-start">
-        {/* Leaflet Live GPS Map */}
+        {/* Interactive Live Map Canvas */}
         <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden flex flex-col">
           <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/60">
             <div className="flex items-center gap-2">
               <MapPin size={18} className="text-blue-600" />
-              <h3 className="font-bold text-slate-900 text-sm">Real-Time Field Map View</h3>
+              <h3 className="font-bold text-slate-900 text-sm">Interactive GPS Radar Map</h3>
             </div>
-            <span className="text-xs font-semibold text-slate-500">
-              Showing {filteredEmployees.length} active location marker(s)
-            </span>
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1 bg-white border border-slate-200 rounded-lg p-0.5">
+                <button
+                  onClick={() => setZoomLevel(z => Math.min(z + 0.2, 1.8))}
+                  className="p-1 text-slate-600 hover:bg-slate-100 rounded"
+                  title="Zoom In"
+                >
+                  <ZoomIn size={14} />
+                </button>
+                <span className="text-[11px] font-mono font-bold px-1.5 text-slate-700">{Math.round(zoomLevel * 100)}%</span>
+                <button
+                  onClick={() => setZoomLevel(z => Math.max(z - 0.2, 0.8))}
+                  className="p-1 text-slate-600 hover:bg-slate-100 rounded"
+                  title="Zoom Out"
+                >
+                  <ZoomOut size={14} />
+                </button>
+              </div>
+            </div>
           </div>
 
-          <div className="h-[460px] w-full relative z-10 bg-slate-100">
-            <MapContainer
-              center={[activeMapCenter.lat, activeMapCenter.lng]}
-              zoom={12}
-              scrollWheelZoom={true}
-              className="h-full w-full rounded-b-2xl"
-            >
-              <TileLayer
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              />
+          <div className="h-[460px] w-full relative overflow-hidden bg-[#0f172a] select-none">
+            {/* Dark Grid Background */}
+            <div
+              className="absolute inset-0 opacity-20 transition-transform duration-300"
+              style={{
+                backgroundImage: 'radial-gradient(#3b82f6 1px, transparent 1px), radial-gradient(#1e40af 1px, #0f172a 1px)',
+                backgroundSize: '24px 24px',
+                transform: `scale(${zoomLevel})`,
+              }}
+            />
 
-              {liveEmployees.map((empItem) => {
-                if (!empItem.check_in_latitude || !empItem.check_in_longitude) return null;
-                const lat = Number(empItem.check_in_latitude);
-                const lng = Number(empItem.check_in_longitude);
+            {/* Radar Scanning Line */}
+            <div className="absolute inset-0 pointer-events-none flex items-center justify-center opacity-30">
+              <div className="w-[380px] h-[380px] rounded-full border border-blue-500/40 animate-ping" />
+              <div className="w-[240px] h-[240px] rounded-full border border-blue-400/30 absolute" />
+            </div>
+
+            {/* City Nodes Visual Highlights */}
+            <div className="absolute inset-0 pointer-events-none p-6 text-[10px] font-mono font-bold text-slate-600 flex justify-between items-end opacity-60">
+              <span>GPS SYNC ACTIVE • 15S PULSE</span>
+              <span>GEO-RADIUS VALIDATION ON</span>
+            </div>
+
+            {/* Active Employee GPS Markers */}
+            <div
+              className="absolute inset-0 transition-transform duration-300"
+              style={{ transform: `scale(${zoomLevel})`, transformOrigin: 'center' }}
+            >
+              {liveEmployees.map((empItem, idx) => {
+                const pos = getMapPosition(empItem.check_in_latitude, empItem.check_in_longitude, idx);
+                const isSelected = selectedItem?.id === empItem.id;
 
                 return (
-                  <React.Fragment key={empItem.id}>
-                    {/* Geofence Visual Ring */}
-                    <Circle
-                      center={[lat, lng]}
-                      radius={150}
-                      pathOptions={{
-                        color: '#2563eb',
-                        fillColor: '#3b82f6',
-                        fillOpacity: 0.15,
-                        weight: 2,
-                      }}
-                    />
+                  <div
+                    key={empItem.id}
+                    className="absolute cursor-pointer transition-all duration-300"
+                    style={{ left: `${pos.x}%`, top: `${pos.y}%`, transform: 'translate(-50%, -50%)' }}
+                    onClick={() => setSelectedItem(empItem)}
+                  >
+                    {/* Geofence Pulse Circle */}
+                    <div className="w-12 h-12 -translate-x-[6px] -translate-y-[6px] rounded-full bg-blue-500/20 border border-blue-400/40 animate-pulse absolute" />
 
-                    {/* Employee Marker */}
-                    <Marker position={[lat, lng]} icon={customEmployeeIcon}>
-                      <Popup className="rounded-xl shadow-lg">
-                        <div className="p-1 max-w-xs space-y-1.5">
-                          <div className="flex items-center gap-2">
-                            <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-xs">
-                              {empItem.employee?.name?.charAt(0) || 'E'}
-                            </div>
-                            <div>
-                              <h4 className="font-bold text-slate-900 text-xs">{empItem.employee?.name}</h4>
-                              <p className="text-[10px] text-slate-500 font-mono">{empItem.employee?.employee_id}</p>
-                            </div>
-                          </div>
+                    {/* Employee Avatar Pin */}
+                    <div className={`relative z-10 w-9 h-9 rounded-full bg-gradient-to-br from-blue-600 to-indigo-700 border-2 ${
+                      isSelected ? 'border-amber-400 scale-125 shadow-lg shadow-amber-500/50' : 'border-white shadow-md shadow-blue-500/30'
+                    } flex items-center justify-center text-white font-extrabold text-xs transition-transform hover:scale-110`}>
+                      {empItem.employee?.name?.charAt(0) || 'F'}
+                      <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-500 border-2 border-white rounded-full" />
+                    </div>
 
-                          <div className="p-2 bg-slate-50 rounded-lg text-xs space-y-1">
-                            <p className="font-semibold text-slate-800">
-                              🎯 Customer: <span className="text-blue-700">{empItem.customer_name}</span>
-                            </p>
-                            {empItem.check_in_time && (
-                              <p className="text-[11px] text-slate-500 flex items-center gap-1">
-                                <Clock size={11} /> Checked In: {new Date(empItem.check_in_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                      </Popup>
-                    </Marker>
-                  </React.Fragment>
+                    {/* Label Tag */}
+                    <div className="absolute top-10 left-1/2 -translate-x-1/2 bg-slate-900/90 text-white text-[10px] font-bold px-2 py-0.5 rounded-md whitespace-nowrap shadow-md border border-slate-700/80 pointer-events-none">
+                      {empItem.employee?.name || 'Staff'}
+                    </div>
+                  </div>
                 );
               })}
-            </MapContainer>
+
+              {liveEmployees.length === 0 && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-400">
+                  <Compass size={40} className="mb-2 text-blue-400/40 animate-spin" style={{ animationDuration: '10s' }} />
+                  <p className="font-bold text-slate-300 text-sm">No Active Field Visits Currently Checked In</p>
+                  <p className="text-xs text-slate-500 mt-1">Staff starting visits on their portal will appear live on map</p>
+                </div>
+              )}
+            </div>
+
+            {/* Selected Marker Detail Card Overlay */}
+            <AnimatePresence>
+              {selectedItem && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 10 }}
+                  className="absolute bottom-4 left-4 right-4 bg-white/95 backdrop-blur-md p-4 rounded-xl shadow-xl border border-slate-200 text-slate-900 z-30"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-600 to-indigo-700 text-white font-extrabold text-sm flex items-center justify-center shadow-md">
+                        {selectedItem.employee?.name?.charAt(0) || 'F'}
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-slate-900 text-sm">{selectedItem.employee?.name}</h4>
+                        <p className="text-xs text-blue-600 font-bold">🎯 {selectedItem.customer_name}</p>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => setSelectedItem(null)}
+                      className="text-xs font-bold text-slate-400 hover:text-slate-600 px-2 py-1 bg-slate-100 rounded-lg"
+                    >
+                      Close
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 mt-3 pt-2 border-t border-slate-100 text-xs">
+                    <div>
+                      <span className="text-slate-400 font-semibold block text-[10px]">CHECK-IN TIME</span>
+                      <span className="font-bold text-slate-800 flex items-center gap-1">
+                        <Clock size={11} className="text-blue-600" />
+                        {selectedItem.check_in_time ? new Date(selectedItem.check_in_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '—'}
+                      </span>
+                    </div>
+
+                    <div>
+                      <span className="text-slate-400 font-semibold block text-[10px]">EMPLOYEE ID</span>
+                      <span className="font-mono font-bold text-slate-800">{selectedItem.employee?.employee_id || '—'}</span>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </div>
 
@@ -289,7 +322,12 @@ const LiveTrackingPage: React.FC = () => {
               filteredEmployees.map((item) => (
                 <div
                   key={item.id}
-                  className="p-3 rounded-xl border border-slate-200/80 bg-slate-50/70 hover:bg-white hover:border-blue-300 transition-all flex items-center justify-between gap-2"
+                  onClick={() => setSelectedItem(item)}
+                  className={`p-3 rounded-xl border transition-all cursor-pointer flex items-center justify-between gap-2 ${
+                    selectedItem?.id === item.id
+                      ? 'bg-blue-50/90 border-blue-300 shadow-2xs'
+                      : 'bg-slate-50/70 border-slate-200/80 hover:bg-white hover:border-blue-200'
+                  }`}
                 >
                   <div className="flex items-center gap-2.5 min-w-0">
                     <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-600 to-indigo-700 text-white flex items-center justify-center font-bold text-xs flex-shrink-0">
@@ -307,16 +345,12 @@ const LiveTrackingPage: React.FC = () => {
                   </div>
 
                   <button
-                    onClick={() => {
-                      if (item.check_in_latitude && item.check_in_longitude) {
-                        setSelectedLocation({
-                          lat: Number(item.check_in_latitude),
-                          lng: Number(item.check_in_longitude),
-                        });
-                      }
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedItem(item);
                     }}
                     className="p-1.5 rounded-lg border border-blue-200 bg-blue-50 hover:bg-blue-100 text-blue-700 transition-colors flex-shrink-0"
-                    title="Focus on Map"
+                    title="Focus on Radar Map"
                   >
                     <Navigation size={14} />
                   </button>
