@@ -40,7 +40,7 @@ const EmployeeDashboardPage: React.FC = () => {
 
   // Fetch my leaves
   const { data: leavesData } = useQuery({
-    queryKey: ['my-leaves-summary'],
+    queryKey: ['my-leaves'],
     queryFn: async () => {
       const { data } = await api.get('/leaves', { params: { limit: 5 } });
       return data.data || [];
@@ -257,7 +257,7 @@ const EmployeeDashboardPage: React.FC = () => {
                 Recent Leaves
               </h3>
               <button
-                onClick={() => navigate('/leaves')}
+                onClick={() => navigate('/my-leaves')}
                 className="text-xs text-blue-600 font-semibold hover:underline"
               >
                 Apply Leave
@@ -278,7 +278,7 @@ const EmployeeDashboardPage: React.FC = () => {
                     <div>
                       <p className="font-bold text-slate-900 capitalize">{leave.leave_type} Leave</p>
                       <p className="text-xs text-slate-500 font-medium mt-0.5">
-                        {format(new Date(leave.start_date), 'dd MMM')} - {format(new Date(leave.end_date), 'dd MMM')}
+                        {leave.from_date ? format(new Date(leave.from_date), 'dd MMM') : '—'} - {leave.to_date ? format(new Date(leave.to_date), 'dd MMM') : '—'}
                       </p>
                     </div>
                     <StatusBadge status={leave.status} size="sm" />
@@ -290,7 +290,7 @@ const EmployeeDashboardPage: React.FC = () => {
 
           <div className="pt-4 border-t border-slate-100 mt-4">
             <button
-              onClick={() => navigate('/leaves')}
+              onClick={() => navigate('/my-leaves')}
               className="btn btn-secondary w-full justify-center text-xs"
             >
               Request New Leave

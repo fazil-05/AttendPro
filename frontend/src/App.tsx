@@ -18,6 +18,7 @@ const EmployeesPage = lazy(() => import('./pages/admin/EmployeesPage'));
 const BranchesPage = lazy(() => import('./pages/admin/BranchesPage'));
 const AttendancePage = lazy(() => import('./pages/admin/AttendancePage'));
 const LeavesPage = lazy(() => import('./pages/admin/LeavesPage'));
+const EmployeeLeavesPage = lazy(() => import('./pages/employee/EmployeeLeavesPage'));
 const HolidaysPage = lazy(() => import('./pages/admin/HolidaysPage'));
 const ReportsPage = lazy(() => import('./pages/admin/ReportsPage'));
 const MarkAttendancePage = lazy(() => import('./pages/attendance/MarkAttendancePage'));
@@ -134,7 +135,15 @@ function AppRoutes() {
           </ProtectedRoute>
         } />
         <Route path="/leaves" element={
-          <Suspense fallback={<PageLoader />}><LeavesPage /></Suspense>
+          <ProtectedRoute allowedRoles={['super_admin', 'branch_manager']}>
+            <Suspense fallback={<PageLoader />}><LeavesPage /></Suspense>
+          </ProtectedRoute>
+        } />
+        {/* Employee Leave View */}
+        <Route path="/my-leaves" element={
+          <ProtectedRoute allowedRoles={['office_employee', 'field_employee']}>
+            <Suspense fallback={<PageLoader />}><EmployeeLeavesPage /></Suspense>
+          </ProtectedRoute>
         } />
         <Route path="/holidays" element={
           <ProtectedRoute allowedRoles={['super_admin']}>

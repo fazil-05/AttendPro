@@ -58,6 +58,7 @@ const LeavesPage: React.FC = () => {
       });
       return data.data as Leave[];
     },
+    refetchInterval: 30_000, // auto-refresh every 30s to catch new employee submissions
   });
 
   // Apply Leave Mutation
@@ -122,14 +123,16 @@ const LeavesPage: React.FC = () => {
           </p>
         </div>
 
-        {/* Apply Leave Button (Available for all employees & managers) */}
-        <button
-          onClick={() => setShowApplyModal(true)}
-          className="btn btn-primary shadow-md shadow-blue-500/20 py-2.5 flex items-center justify-center gap-2"
-          id="apply-leave-btn"
-        >
-          <Plus size={18} /> Apply for Leave
-        </button>
+        {/* Apply Leave Button — employees only */}
+        {isEmployee && (
+          <button
+            onClick={() => setShowApplyModal(true)}
+            className="btn btn-primary shadow-md shadow-blue-500/20 py-2.5 flex items-center justify-center gap-2"
+            id="apply-leave-btn"
+          >
+            <Plus size={18} /> Apply for Leave
+          </button>
+        )}
       </div>
 
       {/* Stats Overview Bar */}
