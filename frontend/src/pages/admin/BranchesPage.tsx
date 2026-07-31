@@ -294,7 +294,7 @@ const BranchesPage: React.FC = () => {
       </div>
 
       {/* Branch Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
         {isLoading ? (
           Array.from({ length: 6 }).map((_, i) => <CardSkeleton key={i} />)
         ) : branches.map((branch, index) => (
@@ -303,17 +303,23 @@ const BranchesPage: React.FC = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.05 }}
-            className="glass-card p-5 bg-white border border-slate-200/80 shadow-xs hover:border-blue-300 transition-all flex flex-col justify-between"
+            className="group relative bg-white rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-xl hover:border-blue-400/40 hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between overflow-hidden"
           >
-            <div>
-              <div className="flex items-start justify-between mb-3">
-                <div className="flex items-center gap-3">
-                  <div className="p-3 rounded-2xl bg-blue-50 text-blue-600 border border-blue-100">
+            {/* Top Royal Blue Accent Line */}
+            <div className="h-1.5 w-full bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-500 opacity-90 group-hover:opacity-100 transition-opacity" />
+
+            <div className="p-5 sm:p-6 space-y-4">
+              {/* Header: Icon, Title, Code & Status */}
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-center gap-3.5">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-700 text-white flex items-center justify-center shadow-md shadow-blue-500/20 group-hover:scale-105 transition-transform flex-shrink-0">
                     <Building2 size={22} />
                   </div>
                   <div>
-                    <h3 className="font-extrabold text-slate-900 text-base">{branch.name}</h3>
-                    <span className="font-mono text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200 px-2 py-0.5 rounded">
+                    <h3 className="font-extrabold text-slate-900 text-base sm:text-lg group-hover:text-blue-600 transition-colors leading-tight">
+                      {branch.name}
+                    </h3>
+                    <span className="inline-block mt-1 font-mono text-[11px] font-bold bg-slate-100 text-slate-600 border border-slate-200/80 px-2 py-0.5 rounded-md">
                       {branch.code}
                     </span>
                   </div>
@@ -321,50 +327,57 @@ const BranchesPage: React.FC = () => {
                 <StatusBadge status={branch.status} size="sm" />
               </div>
 
-              <div className="space-y-2 mb-4">
-                {branch.address && (
-                  <div className="flex items-start gap-2 text-xs text-slate-600 font-medium">
-                    <MapPin size={14} className="mt-0.5 flex-shrink-0 text-blue-600" />
-                    <span className="line-clamp-2">{branch.address}</span>
-                  </div>
-                )}
-                <div className="flex items-center gap-4 text-xs">
-                  <span className="text-blue-700 font-bold bg-blue-50 px-2.5 py-1 rounded-full border border-blue-100">
-                    🎯 Geofence: {branch.radius}m
-                  </span>
-                  {branch.employee_count !== undefined && (
-                    <span className="flex items-center gap-1 font-bold text-slate-700 bg-slate-100 px-2.5 py-1 rounded-full">
-                      <Users size={13} className="text-blue-600" />
-                      {branch.employee_count} employees
-                    </span>
-                  )}
+              {/* Office Address */}
+              {branch.address && (
+                <div className="flex items-start gap-2.5 p-3 rounded-xl bg-slate-50/80 border border-slate-100 text-xs text-slate-600 font-medium">
+                  <MapPin size={15} className="mt-0.5 flex-shrink-0 text-blue-600" />
+                  <span className="line-clamp-2 leading-relaxed">{branch.address}</span>
                 </div>
+              )}
+
+              {/* Geofence & Employee Count Metrics */}
+              <div className="flex flex-wrap items-center gap-2 pt-1">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-50/80 text-blue-700 border border-blue-100 text-xs font-semibold shadow-2xs">
+                  <Navigation size={13} className="text-blue-600" />
+                  Geofence: <strong className="font-bold">{branch.radius}m</strong>
+                </span>
+                {branch.employee_count !== undefined && (
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100/80 text-slate-700 border border-slate-200/80 text-xs font-semibold">
+                    <Users size={13} className="text-slate-500" />
+                    <strong className="font-bold">{branch.employee_count}</strong> employees
+                  </span>
+                )}
               </div>
             </div>
 
-            <div className="flex items-center gap-2 pt-3 border-t border-slate-100">
+            {/* Card Footer Actions */}
+            <div className="px-5 py-3.5 sm:px-6 bg-slate-50/50 border-t border-slate-100 flex items-center justify-between gap-3">
               <button
                 onClick={() => { setEditBranch(branch); setShowForm(true); }}
-                className="btn btn-sm btn-secondary flex-1 text-xs font-semibold"
+                className="btn btn-sm btn-secondary flex-1 text-xs font-bold gap-1.5 shadow-2xs hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all"
               >
-                <Edit size={14} /> Edit
+                <Edit size={14} /> Edit Branch
               </button>
-              <button
-                onClick={() => toggleStatus.mutate({ id: branch.id, status: branch.status === 'active' ? 'inactive' : 'active' })}
-                className="p-2 rounded-lg hover:bg-slate-100 text-slate-500 transition-colors"
-                title={branch.status === 'active' ? 'Disable' : 'Enable'}
-              >
-                {branch.status === 'active'
-                  ? <ToggleRight size={20} className="text-emerald-600" />
-                  : <ToggleLeft size={20} className="text-slate-400" />
-                }
-              </button>
-              <button
-                onClick={() => setDeleteTarget(branch)}
-                className="p-2 rounded-lg hover:bg-red-50 text-slate-400 hover:text-red-600 transition-colors"
-              >
-                <Trash2 size={16} />
-              </button>
+
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={() => toggleStatus.mutate({ id: branch.id, status: branch.status === 'active' ? 'inactive' : 'active' })}
+                  className="p-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-100 text-slate-600 transition-colors shadow-2xs"
+                  title={branch.status === 'active' ? 'Disable Branch' : 'Enable Branch'}
+                >
+                  {branch.status === 'active'
+                    ? <ToggleRight size={20} className="text-emerald-600" />
+                    : <ToggleLeft size={20} className="text-slate-400" />
+                  }
+                </button>
+                <button
+                  onClick={() => setDeleteTarget(branch)}
+                  className="p-2 rounded-xl border border-slate-200 bg-white hover:bg-red-50 hover:border-red-200 text-slate-400 hover:text-red-600 transition-colors shadow-2xs"
+                  title="Delete Branch"
+                >
+                  <Trash2 size={16} />
+                </button>
+              </div>
             </div>
           </motion.div>
         ))}
