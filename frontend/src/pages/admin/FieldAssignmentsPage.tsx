@@ -6,14 +6,14 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 import {
-  Plus, MapPin, Calendar, Clock, CheckCircle2, XCircle, AlertCircle,
-  Building2, Users, Search, Filter, Navigation, UserCheck, Check, X, Loader2
+  Plus, MapPin, Calendar, Clock, CheckCircle2,
+  Search, Navigation, X, Loader2
 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import api from '../../services/api';
-import type { Employee } from '../../types';
+import type { User } from '../../types';
 import { StatusBadge } from '../../components/ui/StatusBadge';
 import { CardSkeleton } from '../../components/ui/SkeletonLoader';
 
@@ -71,7 +71,7 @@ const CreateAssignmentModal: React.FC<{
     queryKey: ['employees-field'],
     queryFn: async () => {
       const { data } = await api.get('/employees?limit=100');
-      return (data.data as Employee[]).filter(
+      return (data.data as User[]).filter(
         e => e.role === 'field_employee' || e.role === 'office_employee' || !e.role
       );
     },
