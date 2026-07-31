@@ -5,8 +5,8 @@ import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Navigation, RefreshCw, Users, MapPin, Clock, Phone,
-  Search, Shield, Activity, Compass, ZoomIn, ZoomOut, CheckCircle2, AlertCircle
+  Navigation, RefreshCw, Users, MapPin, Clock,
+  Search, Shield, Activity, Compass, ZoomIn, ZoomOut, CheckCircle2
 } from 'lucide-react';
 import api from '../../services/api';
 import { CardSkeleton } from '../../components/ui/SkeletonLoader';
