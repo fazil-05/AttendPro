@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 import {
   Clock, Calendar, CheckCircle, Navigation,
-  AlertCircle, ChevronRight, Shield, FileText, MapPin, Check, X, Loader2
+  AlertCircle, ChevronRight, Shield, FileText, MapPin, Check
 } from 'lucide-react';
 import { format } from 'date-fns';
 import api from '../../services/api';
@@ -47,7 +47,7 @@ const EmployeeDashboardPage: React.FC = () => {
   });
 
   // Fetch my assigned field visits
-  const { data: fieldAssignmentsData, refetch: refetchAssignments } = useQuery({
+  const { data: fieldAssignmentsData } = useQuery({
     queryKey: ['my-field-assignments'],
     queryFn: async () => {
       const { data } = await api.get('/field-assignments');
