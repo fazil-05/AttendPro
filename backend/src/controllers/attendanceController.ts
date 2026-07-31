@@ -93,7 +93,7 @@ export const checkIn = asyncHandler(async (req: AuthenticatedRequest, res: Respo
   };
 
   const checkInTime = new Date();
-  const status = determineAttendanceStatus(checkInTime, shiftTiming);
+  const status = determineAttendanceStatus(checkInTime, shiftTiming, false, false, false);
 
   const attendanceData = {
     employee_id: userId,

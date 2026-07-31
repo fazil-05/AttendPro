@@ -108,3 +108,117 @@ export const getDashboardStats = asyncHandler(async (req: any, res: Response) =>
 
   res.json({ success: true, data: summary });
 });
+
+// ─── Holidays ─────────────────────────────────────────────────
+
+/** GET /api/holidays */
+export const getHolidays = asyncHandler(async (_req: any, res: Response) => {
+  const { data, error } = await supabase
+    .from('holidays')
+    .select('*')
+    .order('date', { ascending: true });
+
+  if (error) throw createError('Failed to fetch holidays', 500);
+  res.json({ success: true, data: data || [] });
+});
+
+/** POST /api/holidays */
+export const createHoliday = asyncHandler(async (req: any, res: Response) => {
+  const { name, date, type, branch_id, description } = req.body;
+  if (!name || !date) throw createError('Name and date are required', 400);
+
+  const { data, error } = await supabase
+    .from('holidays')
+    .insert({ name, date, type: type || 'national', branch_id: branch_id || null, description: description || null })
+    .select()
+    .single();
+
+  if (error) throw createError('Failed to create holiday', 500);
+  res.status(201).json({ success: true, message: 'Holiday created', data });
+});
+
+/** DELETE /api/holidays/:id */
+export const deleteHoliday = asyncHandler(async (req: any, res: Response) => {
+  const { id } = req.params;
+  const { error } = await supabase.from('holidays').delete().eq('id', id);
+  if (error) throw createError('Failed to delete holiday', 500);
+  res.json({ success: true, message: 'Holiday deleted' });
+});
+
+// ─── Departments ──────────────────────────────────────────────
+
+/** GET /api/departments */
+export const getDepartments = asyncHandler(async (_req: any, res: Response) => {
+  const { data, error } = await supabase
+    .from('departments')
+    .select('*, branches(id, name)')
+    .order('name', { ascending: true });
+
+  if (error) throw createError('Failed to fetch departments', 500);
+  res.json({ success: true, data: data || [] });
+});
+
+/** POST /api/departments */
+export const createDepartment = asyncHandler(async (req: any, res: Response) => {
+  const { name, branch_id } = req.body;
+  if (!name) throw createError('Department name is required', 400);
+
+  const { data, error } = await supabase
+    .from('departments')
+    .insert({ name, branch_id: branch_id || null })
+    .select()
+    .single();
+
+  if (error) throw createError('Failed to create department', 500);
+  res.status(201).json({ success: true, message: 'Department created', data });
+});
+
+/** DELETE /api/departments/:id */
+export const deleteDepartment = asyncHandler(async (req: any, res: Response) => {
+  const { id } = req.params;
+  const { error } = await supabase.from('departments').delete().eq('id', id);
+  if (error) throw createError('Failed to delete department', 500);
+  res.json({ success: true, message: 'Department deleted' });
+});
+
+// ─── Designations ─────────────────────────────────────────────
+
+/** GET /api/designations */
+export const getDesignations = asyncHandler(async (_req: any, res: Response) => {
+  const { data, error } = await supabase
+    .from('designations')
+    .select('*')
+    .order('name', { ascending: true });
+
+  if (error) throw createError('Failed to fetch designations', 500);
+  res.json({ success: true, data: data || [] });
+});
+
+/** POST /api/designations */
+export const createDesignation = asyncHandler(async (req: any, res: Response) => {
+  const { name } = req.body;
+  if (!name) throw createError('Designation name is required', 400);
+
+  const { data, error } = await supabase
+    .from('designations')
+    .insert({ name })
+    .select()
+    .single();
+
+  if (error) throw createError('Failed to create designation', 500);
+  res.status(201).json({ success: true, message: 'Designation created', data });
+});
+
+// ─── Shifts ───────────────────────────────────────────────────
+
+/** GET /api/shifts */
+export const getShifts = asyncHandler(async (_req: any, res: Response) => {
+  const { data, error } = await supabase
+    .from('shifts')
+    .select('*')
+    .order('name', { ascending: true });
+
+  if (error) throw createError('Failed to fetch shifts', 500);
+  res.json({ success: true, data: data || [] });
+});
+
