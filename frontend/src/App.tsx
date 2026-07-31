@@ -23,6 +23,7 @@ const HolidaysPage = lazy(() => import('./pages/admin/HolidaysPage'));
 const ReportsPage = lazy(() => import('./pages/admin/ReportsPage'));
 const MarkAttendancePage = lazy(() => import('./pages/attendance/MarkAttendancePage'));
 const FieldAssignmentsPage = lazy(() => import('./pages/admin/FieldAssignmentsPage'));
+const LiveTrackingPage = lazy(() => import('./pages/admin/LiveTrackingPage'));
 
 // ─── Query Client ────────────────────────────────────────────
 const queryClient = new QueryClient({
@@ -175,11 +176,11 @@ function AppRoutes() {
             <Suspense fallback={<PageLoader />}><FieldAssignmentsPage /></Suspense>
           </ProtectedRoute>
         } />
+        {/* Live Employee Tracking */}
         <Route path="/live-tracking" element={
-          <div className="glass-card p-8 text-center text-slate-500">
-            <p className="text-lg font-medium">Live Field Employee Tracking</p>
-            <p className="text-sm mt-1">Map view of active field employees</p>
-          </div>
+          <ProtectedRoute allowedRoles={['super_admin', 'branch_manager']}>
+            <Suspense fallback={<PageLoader />}><LiveTrackingPage /></Suspense>
+          </ProtectedRoute>
         } />
         <Route path="/settings" element={
           <div className="glass-card p-8 text-center text-slate-500">
